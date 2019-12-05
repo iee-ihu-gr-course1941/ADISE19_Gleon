@@ -1,0 +1,151 @@
+<?php
+
+// COMING SOON
+
+?>
+
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+      
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css?family=GFS+Didot&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css?family=Comfortaa&display=swap" rel="stylesheet">
+     <style>
+         #login-form{
+
+             text-align: center;
+             border-radius: 10px;
+             width: max-content;
+             height: max-content;
+             padding: 4vmin;
+             background-color: #B0D9C1;
+             position: relative;
+             top:10px;
+         }
+
+         .alert{
+             display: none;
+         }
+         #welcomeMsg{
+             text-align: center;
+             color: #B0D9C1;
+             font-family: 'GFS Didot', serif;
+         }
+         body{
+             margin: 0;
+             padding: 0;
+             background-color: #03733F;
+             height: 600px;
+         }
+         .alerts{
+             text-align: center;
+         }
+         .btn-primary{
+             background-color: #048C4D;
+         }
+         .btn-primary:focus{
+             background-color: #03733F;
+             border-color: #B0D9C1;
+         }
+         .btn-primary:hover, .btn-primary:focus, .btn-primary:active, .btn-primary.active, .open>.dropdown-toggle.btn-primary {
+            color: #fff;
+            background-color: #05A65B;
+            border-color: #285e8e; /*set the color you want here*/
+         }  
+         h1{
+             font-size:300%;
+             font-family: 'Comfortaa', cursive;
+         }
+    </style>
+    <title>Ξερή ΑΔΙΣΕ_2019</title>
+  </head>
+      <body>
+         <div class="alert alert-primary alerts" role="alert">
+         </div>
+         <div class="alert alert-warning alerts" role="alert">
+         </div>
+         <div class="alert alert-danger alerts" role="alert">
+         </div>
+         <container name="login">
+          <div id="welcomeMsg">
+              
+              <h1>Ξερή</h1>
+              <hr>
+              <h4>Λεωνίδης Γιώργος</h4>
+              <h6>Ανάπτυξη Διαδικτυακών Συστημάτων & Εφαρμογών</h6>
+              <hr>
+             
+          </div> 
+          
+            <center>
+           <div id="login-form">
+              
+          <form method="post" onsubmit="return false;">
+
+            <div class="form-group">
+                <label for="username">Όνομα χρήστη (==esentis)</label>
+                <input type="text" class="form-control" id="username">   
+            </div>
+           
+            <input id="submitBtn" name="submitBtn" class="btn btn-primary" type="submit" value="Είσοδος">
+          
+          </form>
+          </div>
+            </center>
+         </container>  
+    <!-- Optional JavaScript -->
+    <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js">
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tether/1.4.7/js/tether.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
+      
+    <script type="text/javascript">
+
+        function hideSuccessAlert(){
+            $(".alert-primary").slideToggle(500);
+        }
+        function hideWarningAlert(){
+            $(".alert-warning").slideToggle(500);
+        }
+        function hideErrorAlert(){
+            $(".alert-danger").slideToggle(500);
+        }
+        
+        function hideLogin(){
+            $("#login-form").hide(500);
+        }
+        
+        $("#submitBtn").on("click",function(){
+            var username = $("#username").val();
+            if (username==""){
+                $(".alert-warning").text("Το όνομα χρήστη δε μπορεί να είναι κενό !");
+                $(".alert-warning").slideToggle(500);
+                setTimeout(hideWarningAlert,2500);
+                //$(".alert-warning").text("");
+            }else if(username=="esentis"){
+                $(".alert-primary").text("Επιτυχής σύνδεση ! Καλώς ήρθες "+username);
+                setTimeout(hideLogin);
+                $(".alert-primary").slideToggle(500);
+                setTimeout(hideSuccessAlert,2500);
+            }else{
+                $(".alert-danger").text("Το όνομα χρήστη δεν βρέθηκε !");
+                $(".alert-danger").slideToggle(500);
+                setTimeout(hideErrorAlert,2500);
+            }
+            
+        });
+
+    </script>
+  </body>
+</html>
