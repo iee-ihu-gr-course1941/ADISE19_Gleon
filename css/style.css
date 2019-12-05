@@ -1,0 +1,43 @@
+#login-form{
+             text-align: center;
+             border-radius: 10px;
+             width: max-content;
+             height: max-content;
+             padding: 4vmin;
+             background-color: #B0D9C1;
+             position: relative;
+             top:10px;
+         }
+         .alert{
+             display: none;
+         }
+         #welcomeMsg{
+             text-align: center;
+             color: #B0D9C1;
+             font-family: 'GFS Didot', serif;
+         }
+         body{
+             margin: 0;
+             padding: 0;
+             background-color: #03733F;
+             height: 600px;
+         }
+         .alerts{
+             text-align: center;
+         }
+         .btn-primary{
+             background-color: #048C4D;
+         }
+         .btn-primary:focus{
+             background-color: #03733F;
+             border-color: #B0D9C1;
+         }
+         .btn-primary:hover, .btn-primary:focus, .btn-primary:active, .btn-primary.active, .open>.dropdown-toggle.btn-primary {
+            color: #fff;
+            background-color: #05A65B;
+            border-color: #285e8e; /*set the color you want here*/
+         }  
+         h1{
+             font-size:300%;
+             font-family: 'Comfortaa', cursive;
+         }
