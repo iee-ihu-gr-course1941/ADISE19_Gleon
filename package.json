@@ -1,0 +1,24 @@
+{
+  "name": "adise19_gleon",
+  "version": "1.0.0",
+  "description": "online kseri",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/iee-ihu-gr-course1941/ADISE19_Gleon.git"
+  },
+  "author": "esentis",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/iee-ihu-gr-course1941/ADISE19_Gleon/issues"
+  },
+  "homepage": "https://github.com/iee-ihu-gr-course1941/ADISE19_Gleon#readme",
+  "dependencies": {
+    "body-parser": "^1.19.0",
+    "ejs": "^3.0.1",
+    "express": "^4.17.1"
+  }
+}
