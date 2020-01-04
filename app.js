@@ -48,7 +48,7 @@ io.on('connection', function(socket) {
   });
   //send to client how many players are currently in the game
   socket.emit("usersInGame",userInGame);
-  
+
   // //Send a message after a timeout of 4seconds
   // setTimeout(function() {
   //   //socket.send sends a message

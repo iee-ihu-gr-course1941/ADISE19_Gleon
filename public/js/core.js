@@ -28,6 +28,24 @@ socket.on("usersInGame", function(userInGame) {
     full = true;
   }
 });
+//making cards draggable
+$(".playingCard").draggable({
+  revert: "invalid"
+});
+//making the table droppable
+$("#tablePicture").droppable({
+  accept: ".playingCard",
+  //drop function to get info about what card was dropped and who dropped it
+  drop: function(event,ui){
+    console.log(event);
+    console.log(ui);
+    console.log($(ui.draggable));
+    //disable dragging after card being dropped
+    $(ui.draggable).draggable('disable');
+
+  }
+});
+
 
 // submit button on click event
 $("#submitBtn").on("click", function(e) {

@@ -9,8 +9,8 @@
   top: 10px;
 }
 
-.alert {
-  display: none;
+#tablePicture{
+  width:850px;
 }
 
 #welcomeMsg {
@@ -19,11 +19,21 @@
   font-family: 'GFS Didot', serif;
 }
 
+
 body {
   margin: 0;
   padding: 0;
   background-color: #03733F;
   height: 600px;
+}
+
+h1 {
+  font-size: 300%;
+  font-family: 'Comfortaa', cursive;
+}
+
+.alert {
+  display: none;
 }
 
 .alerts {
@@ -46,13 +56,31 @@ body {
   /*set the color you want here*/
 }
 
-h1 {
-  font-size: 300%;
-  font-family: 'Comfortaa', cursive;
-}
+
 
 .footer-copyright {
   text-align: center;
   position: relative;
   padding: 50px;
+  top:50px;
+}
+.playingCard{
+  width: 6rem;
+  padding: 0;
+  margin:0;
+}
+.playerHand{
+  padding-left: 380px;
+  padding-right: 380px;
+  padding-top:0;
+  padding-bottom:0;
+  margin:0;
+}
+.trapezi{
+  position: relative;
+  text-align: center;
+}
+.row{
+  padding:0;
+  margin:0;
 }
