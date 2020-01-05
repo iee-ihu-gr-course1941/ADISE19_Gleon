@@ -15,10 +15,10 @@
 <div class="container">
   <div class="playerHand">
     <div class="row">
-      <%for (var i=0; i<6;i++){%>
-      <div class="col-lg-2 col-md-2 col-sm-2 col-xs-2">
+      <%for (var i=0; i< startingHand.length ;i++){%>
+      <div class="col-lg-2 col-md-2 col-sm-2 col-xs-2" id="<%=startingHand[i]._id%>">
         <div class="playingCard">
-          <img src="images/2C.png" class="card-img-top">
+          <img src="images/<%=startingHand[i].value%><%=startingHand[i].suit%>.png" class="card-img-top">
         </div>
       </div>
       <%}%>

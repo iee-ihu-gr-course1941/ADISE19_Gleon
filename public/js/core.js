@@ -26,8 +26,14 @@ function hideLogin() {
 socket.on("usersInGame", function(userInGame) {
   if (userInGame >= 2) {
     full = true;
+    socket.emit("startGame");
   }
 });
+
+socket.on("test",function(players){
+  alert(players[0].pID);
+});
+
 //making cards draggable
 $(".playingCard").draggable({
   revert: "invalid"
@@ -39,10 +45,21 @@ $("#tablePicture").droppable({
   drop: function(event,ui){
     console.log(event);
     console.log(ui);
-    console.log($(ui.draggable));
     //disable dragging after card being dropped
     $(ui.draggable).draggable('disable');
+    //parent card ID
+    var droppedItemId = ui.draggable.parent().attr("id");
 
+    console.log(droppedItemId);
+    //automatically center dropped card
+    ui.draggable.position({
+        my: "center",
+        at: "center",
+        of: $(this),
+        using: function(pos) {
+          $(this).animate(pos, "slow", "linear");
+        }
+      });
   }
 });
 
@@ -68,6 +85,7 @@ $("#submitBtn").on("click", function(e) {
     e.preventDefault();
     //everything went ok and you will now be redirected to game page
   } else {
+    socket.emit("sendPlayer",username);
     $(".alert-primary").text("Επιτυχής σύνδεση ! Καλώς ήρθες " + username);
     setTimeout(hideLogin);
     $(".alert-primary").slideToggle(500);

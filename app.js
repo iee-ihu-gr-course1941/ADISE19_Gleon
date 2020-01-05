@@ -33,34 +33,16 @@ var users = 0;
 var userInGame = 0 ;
 //a boolean to check if the game is full or not
 var gameFull = false ;
-//SOCKETS' MANAGEMENT
-io.on('connection', function(socket) {
-  //incrementing users by 1
-  users++;
-  console.log("current users are "+users);
-  //when a user connects
-  console.log("A user has connected");
-  //when a user disconnets
-  socket.on('disconnect', function() {
-    //decrement user upon leaving
-    users--;
-    console.log('A user disconnected');
-  });
-  //send to client how many players are currently in the game
-  socket.emit("usersInGame",userInGame);
+//an array for players
+var players = [];
 
-  // //Send a message after a timeout of 4seconds
-  // setTimeout(function() {
-  //   //socket.send sends a message
-  //    socket.send('Sent a message 4seconds after connection!');
-  // }, 4000);
-});
+
 
 
 /////////////////////////////database COLLECTION AND SCHEMA creation ////////////
 //we create the SCHEMA of a card
 const cardSchema = mongoose.Schema({
-  suit: String, //SPADES , HEARTS , DIAMONDS , CLUBS
+  suit: String, //(S)PADES , (H)EARTS , (D)IAMONDS , (C)LUBS
   value: String, //2 3 4 5 6 7 8 9 10 J Q K A
 });
 
@@ -74,12 +56,54 @@ const deckSchema = mongoose.Schema({
 
 //we finally create the DECK collection (TABLE) that has the 52 cards.
 const Deck = mongoose.model("deck", deckSchema);
+
 // HOW WE SAVE ONE CARD
 // let newCard = new Card({
-//   suit:"spades",
+//   suit:"S",
 //   value:"A"
 // });
 // newCard.save();
+
+//SOCKETS' MANAGEMENT
+io.on('connection', function(socket) {
+
+  //incrementing users by 1
+  users++;
+  console.log("current users are "+users);
+  //when a user connects
+  console.log("A user has connected");
+  //when a user disconnets
+  socket.on('disconnect', function() {
+    //decrement user upon leaving
+    users--;
+    console.log('A user disconnected');
+  });
+  //send to client how many players are currently in the game
+  socket.emit("usersInGame",userInGame);
+  socket.on("sendPlayer",function(playerName){
+    var player = {
+      pName:playerName,
+      pID:socket.id,
+      startingHand:[]
+    };
+    //save player in our players' array
+    players.push(player);
+
+    //debug
+    socket.emit("test",players);
+
+
+  });
+  //on startGame handler which is sent from client when game is full
+  socket.on("startGame",function(){
+
+  });
+  // //Send a message after a timeout of 4seconds
+  // setTimeout(function() {
+  //   //socket.send sends a message
+  //    socket.send('Sent a message 4seconds after connection!');
+  // }, 4000);
+});
 
 
 
@@ -88,7 +112,13 @@ const Deck = mongoose.model("deck", deckSchema);
 app.route("/")
 
   .get(function(req, res) {
-    console.log("Users in game are "+userInGame);
+
+    // Card.updateMany({suit:"diamonds"},{suit:"D"},function(err,res){
+    //   if(!err){
+    //     console.log("UPDATED");
+    //   }
+    // });
+
     res.render("index");
   })
 
@@ -100,13 +130,24 @@ app.route("/")
       //with lodash we can get random 6 items from our cards db. Which is
       //eventually our starting hand.
       startingHand = _.sampleSize(foundItems, 6);
+      res.render("game", {
+        gameBoard: "Welcome " + user + " waiting the game to start...",
+        startingHand:startingHand
+      });
       //we create a new deck which has all the elements besides the starting hand
       remainingCards = _.difference(foundItems, startingHand);
     });
     userInGame++;
-    res.render("game", {
-      gameBoard: "Welcome " + user + " waiting the game to start..."
-    });
+    console.log("Current players are"+ players);
+
+    // //here we create the Player object
+    // var Player = ({
+    //   pID:socket.id,
+    //   startingHand:startingHand,
+    //   pNumber:0
+    // });
+
+
   });
 
 
