@@ -1,12 +1,16 @@
 <%- include('partials/header'); -%>
 
-<h1><%= gameBoard%> </h1>
+<div class="container text-center">
 
+
+  <h2 id="title"><%= title%> </h2>
+
+</div>
 
 
 <div class="container">
   <div class="trapezi">
-    <img id="tablePicture" src="images/trapezi.png" >
+    <img id="tablePicture" src="images/trapezi.png">
   </div>
 </div>
 
@@ -16,8 +20,8 @@
   <div class="playerHand">
     <div class="row">
       <%for (var i=0; i< startingHand.length ;i++){%>
-      <div class="col-lg-2 col-md-2 col-sm-2 col-xs-2" id="<%=startingHand[i]._id%>">
-        <div class="playingCard">
+      <div class="col-lg-2 col-md-2 col-sm-2 col-xs-2">
+        <div class="playingCard" id="<%=startingHand[i]._id%>">
           <img src="images/<%=startingHand[i].value%><%=startingHand[i].suit%>.png" class="card-img-top">
         </div>
       </div>
@@ -26,6 +30,41 @@
   </div>
 </div>
 
+<div class="container">
+  <div class="playerHand">
+    <div class="row">
+      <div class="col-lg-2 col-md-2 col-sm-2 col-xs-2" >
+        <div class="playingCard" id="card0">
+        </div>
+      </div>
+      <div class="col-lg-2 col-md-2 col-sm-2 col-xs-2" >
+        <div class="playingCard" id="card1">
+          <img src="" class="card-img-top">
+        </div>
+      </div>
+      <div class="col-lg-2 col-md-2 col-sm-2 col-xs-2" >
+        <div class="playingCard" id="card2">
+          <img src="" class="card-img-top">
+        </div>
+      </div>
+      <div class="col-lg-2 col-md-2 col-sm-2 col-xs-2" >
+        <div class="playingCard" id="card3">
+          <img src="" class="card-img-top">
+        </div>
+      </div>
+      <div class="col-lg-2 col-md-2 col-sm-2 col-xs-2" >
+        <div class="playingCard" id="card4">
+          <img src="" class="card-img-top">
+        </div>
+      </div>
+      <div class="col-lg-2 col-md-2 col-sm-2 col-xs-2" >
+        <div class="playingCard" id="card5">
+          <img src="" class="card-img-top">
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 
 
 <%- include('partials/footer'); -%>

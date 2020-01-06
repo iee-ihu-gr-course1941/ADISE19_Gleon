@@ -4,6 +4,8 @@
 var socket = io();
 //a boolean to check the game room
 var full = false;
+//player object
+var thePlayer;
 
 //method to hide the alerts
 function hideSuccessAlert() {
@@ -30,6 +32,27 @@ socket.on("usersInGame", function(userInGame) {
   }
 });
 
+//here we grap the players ID(color)
+socket.on("sendBackPlayer",function(player){
+ alert(player.pID);
+});
+
+//here starts the game
+socket.on("gameOn",function(information){
+  console.log("P1 id : "+information.players[0].pID);
+  console.log("P2 id : "+information.players[1].pID);
+  console.log("Your id : "+thePlayer);
+  $("#title").text("Το παιχνίδι ξεκίνησε");
+  $("#title").append("<p>Είσαι ο παίκτης με το χρώμα</p>"+thePlayer.pID);
+  for (var i=0; i< 2 ;i++){
+    if (information.players[i].pID==playerID){
+      //automatically render the starting hand
+      $("#card"+i).append("<img src=\"images/"+information.players[i].startingHand[i].value+""+information.players[i].startingHand[i].suit+".png\" class=\"card-img-top\">");
+    }
+  }
+});
+
+
 socket.on("test",function(players){
   alert(players[0].pID);
 });
@@ -48,7 +71,7 @@ $("#tablePicture").droppable({
     //disable dragging after card being dropped
     $(ui.draggable).draggable('disable');
     //parent card ID
-    var droppedItemId = ui.draggable.parent().attr("id");
+    var droppedItemId = ui.draggable.attr("id");
 
     console.log(droppedItemId);
     //automatically center dropped card
@@ -83,8 +106,10 @@ $("#submitBtn").on("click", function(e) {
     $(".alert-warning").slideToggle(500);
     setTimeout(hideWarningAlert, 2500);
     e.preventDefault();
-    //everything went ok and you will now be redirected to game page
+    //everything went ok and you will now be redirected to loading page
   } else {
+
+    //we send to our server player's name
     socket.emit("sendPlayer",username);
     $(".alert-primary").text("Επιτυχής σύνδεση ! Καλώς ήρθες " + username);
     setTimeout(hideLogin);

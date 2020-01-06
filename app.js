@@ -29,12 +29,15 @@ app.use(express.static("public"));
 
 //a counter to see how many users are currently on our app
 var users = 0;
-//a counter to check the players logged playing (2 max)
-var userInGame = 0 ;
 //a boolean to check if the game is full or not
-var gameFull = false ;
+var gameFull = false;
 //an array for players
 var players = [];
+//an array that indicates the current gameBoard
+var board = [];
+//a counter to check the players logged playing (2 max)
+var userInGame = players.length;
+
 
 
 
@@ -69,7 +72,7 @@ io.on('connection', function(socket) {
 
   //incrementing users by 1
   users++;
-  console.log("current users are "+users);
+  console.log("current users are " + users);
   //when a user connects
   console.log("A user has connected");
   //when a user disconnets
@@ -79,30 +82,51 @@ io.on('connection', function(socket) {
     console.log('A user disconnected');
   });
   //send to client how many players are currently in the game
-  socket.emit("usersInGame",userInGame);
-  socket.on("sendPlayer",function(playerName){
+  socket.emit("usersInGame", userInGame);
+  socket.on("sendPlayer", function(playerName) {
+    var pID;
+    //if the player is the first his ID is RED
+    if (players.length==0){
+      pID="red";
+
+    }else{
+      pID="blue";
+
+    }
     var player = {
-      pName:playerName,
-      pID:socket.id,
-      startingHand:[]
+      pName: playerName,
+      pID: pID,
+      startingHand: [],
+      turn: false
     };
+    userInGame++;
     //save player in our players' array
     players.push(player);
-
-    //debug
-    socket.emit("test",players);
-
-
+    socket.emit("sendBackPlayer",player);
   });
   //on startGame handler which is sent from client when game is full
-  socket.on("startGame",function(){
+  socket.on("startGame", function() {
+    //let the first player who joins the game, start.
+    players[0].turn=true;
+    let remainingCards = [];
+    Card.find(function(err, foundItems) {
+      //with lodash we can get random 6 items from our cards db. Which is
+      //eventually our starting hand.
+      //We initialise the first player's hand
+      players[0].startingHand = _.sampleSize(foundItems, 6);
+      //we remove the cards from the rest deck
+      remainingCards = _.difference(foundItems, players[0].startingHand);
+      players[0].startingHand = _.sampleSize(remainingCards, 6);
+      remainingCards = _.difference(remainingCards, players[0].startingHand);
+      // sending to all clients in 'game' room, including sender
+      //we send the players and the remaining deck to our client to keep a track
+      io.sockets.emit("gameOn", {
+        players,
+        remainingCards
+      });
+    });
 
   });
-  // //Send a message after a timeout of 4seconds
-  // setTimeout(function() {
-  //   //socket.send sends a message
-  //    socket.send('Sent a message 4seconds after connection!');
-  // }, 4000);
 });
 
 
@@ -110,7 +134,6 @@ io.on('connection', function(socket) {
 
 // "/" HTTP requests
 app.route("/")
-
   .get(function(req, res) {
 
     // Card.updateMany({suit:"diamonds"},{suit:"D"},function(err,res){
@@ -121,33 +144,11 @@ app.route("/")
 
     res.render("index");
   })
-
   .post(function(req, res) {
-    let startingHand = [];
-    let remainingCards = [];
-    let user = req.body.usernameText;
-    Card.find(function(err, foundItems) {
-      //with lodash we can get random 6 items from our cards db. Which is
-      //eventually our starting hand.
-      startingHand = _.sampleSize(foundItems, 6);
-      res.render("game", {
-        gameBoard: "Welcome " + user + " waiting the game to start...",
-        startingHand:startingHand
-      });
-      //we create a new deck which has all the elements besides the starting hand
-      remainingCards = _.difference(foundItems, startingHand);
+    res.render("game",{
+      title:"Περιμένετε να συνδεθεί δεύτερο άτομο για να ξεκινήσει το παιχνίδι",
+      startingHand:[]
     });
-    userInGame++;
-    console.log("Current players are"+ players);
-
-    // //here we create the Player object
-    // var Player = ({
-    //   pID:socket.id,
-    //   startingHand:startingHand,
-    //   pNumber:0
-    // });
-
-
   });
 
 
@@ -166,6 +167,13 @@ app.get("/cards", function(req, res) {
   });
 });
 
+app.post("/game",function(req,res){
+
+  res.render("game",{
+    title: " Ξερη 2019",
+    startingHand:[]
+  });
+});
 
 //server start to port 3000
 server.listen(port, function(err) {
