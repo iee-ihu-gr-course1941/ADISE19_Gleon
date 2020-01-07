@@ -7,7 +7,11 @@ const ejs = require("ejs");
 const mongoose = require("mongoose");
 const socket = require("socket.io");
 const http = require("http");
-var _ = require('lodash');
+const _ = require('lodash');
+const session = require("express-session");
+const passport = require("passport");
+const uid = require('uid-safe');
+const passportLocalMongoose = require("passport-local-mongoose");
 
 //our port to connect
 const port = 3000;
@@ -36,10 +40,29 @@ var players = [];
 //an array that indicates the current gameBoard
 var board = [];
 //a counter to check the players logged playing (2 max)
-var userInGame = players.length;
+var userInGame;
 
 
+//////////////////////////////////SESSION SETTINGS/////////////////////////////
+//function to generate a random ID
+//store user's session ID to send it back
+var currentSessionID;
 
+function genuuid() {
+  //18 byte length string
+  return uid.sync(18);
+}
+//we setup our session's info
+app.use(session({
+  // genid: function(req) {
+  //   return genuuid(); // automatically generated ID
+  // },
+  secret: 'secretSecret',
+  resave: false,
+  saveUninitialized: false
+}));
+app.use(passport.initialize());
+app.use(passport.session());
 
 
 /////////////////////////////database COLLECTION AND SCHEMA creation ////////////
@@ -48,6 +71,25 @@ const cardSchema = mongoose.Schema({
   suit: String, //(S)PADES , (H)EARTS , (D)IAMONDS , (C)LUBS
   value: String, //2 3 4 5 6 7 8 9 10 J Q K A
 });
+//we create our user's SCHEMA
+const userSchema = mongoose.Schema({
+  pName: String,
+  password: String,
+  startingHand: [cardSchema],
+  currentTurn: {
+    required:true,
+    type:Boolean
+  }
+});
+//plugin our Users with Passport for easier Authentication
+userSchema.plugin(passportLocalMongoose);
+//users collection (TABLE) that will hold the current active players
+const User = mongoose.model("user", userSchema);
+//code needed for passport initialisation
+passport.use(User.createStrategy());
+passport.serializeUser(User.serializeUser());
+passport.deserializeUser(User.deserializeUser());
+
 
 //we create the collection (TABLE) where it will hold our cards
 const Card = mongoose.model("card", cardSchema);
@@ -69,45 +111,43 @@ const Deck = mongoose.model("deck", deckSchema);
 
 //SOCKETS' MANAGEMENT
 io.on('connection', function(socket) {
-
-  //incrementing users by 1
-  users++;
-  console.log("current users are " + users);
   //when a user connects
-  console.log("A user has connected");
+  // console.log("A user has connected");
+  //incrementing users by 1
+  // users++;
+  // console.log("current users are " + users);
   //when a user disconnets
-  socket.on('disconnect', function() {
-    //decrement user upon leaving
-    users--;
-    console.log('A user disconnected');
-  });
+  // socket.on('disconnect', function() {
+  //   //decrement user upon leaving
+  //   users--;
+  //   console.log('A user disconnected');
+  // });
   //send to client how many players are currently in the game
   socket.emit("usersInGame", userInGame);
-  socket.on("sendPlayer", function(playerName) {
-    var pID;
-    //if the player is the first his ID is RED
-    if (players.length==0){
-      pID="red";
-
-    }else{
-      pID="blue";
-
-    }
-    var player = {
-      pName: playerName,
-      pID: pID,
-      startingHand: [],
-      turn: false
-    };
-    userInGame++;
-    //save player in our players' array
-    players.push(player);
-    socket.emit("sendBackPlayer",player);
-  });
-  //on startGame handler which is sent from client when game is full
+  // socket.on("sendPlayer", function(playerName) {
+  //   var pID;
+  //   //if the player is the first his ID is RED
+  //   if (players.length==0){
+  //     pID="red";
+  //
+  //   }else{
+  //     pID="blue";
+  //   }
+  //   var player = {
+  //     pName: playerName,
+  //     pID: pID,
+  //     startingHand: [],
+  //     turn: false
+  //   };
+  //   userInGame++;
+  //   //save player in our players' array
+  //   players.push(player);
+  //   socket.emit("sendBackPlayer",player);
+  // });
+  //on startGame handler which is sent from client when game is ready to start
   socket.on("startGame", function() {
     //let the first player who joins the game, start.
-    players[0].turn=true;
+    players[0].turn = true;
     let remainingCards = [];
     Card.find(function(err, foundItems) {
       //with lodash we can get random 6 items from our cards db. Which is
@@ -125,7 +165,6 @@ io.on('connection', function(socket) {
         remainingCards
       });
     });
-
   });
 });
 
@@ -135,22 +174,70 @@ io.on('connection', function(socket) {
 // "/" HTTP requests
 app.route("/")
   .get(function(req, res) {
-
-    // Card.updateMany({suit:"diamonds"},{suit:"D"},function(err,res){
-    //   if(!err){
-    //     console.log("UPDATED");
-    //   }
-    // });
-
+    console.log(req.session);
+    //find how many players are registered
+    User.countDocuments(function(err, count) {
+      console.log('there are %d users', count);
+      usersInGame=count;
+    });
     res.render("index");
   })
   .post(function(req, res) {
-    res.render("game",{
-      title:"Περιμένετε να συνδεθεί δεύτερο άτομο για να ξεκινήσει το παιχνίδι",
-      startingHand:[]
+    const newUser = new User({
+      username: req.body.username,
+      password: req.body.password
     });
+    passport.authenticate('local', function(err, user, info) {
+      console.log(user);
+      console.log(info);
+      if (!user) {
+        return res.redirect('/');
+      }
+      req.logIn(newUser, function(err) {
+        if (err) {
+          console.log(err);
+        }
+        usersInGame++;
+        return res.render("game", {
+          title: "Περιμένετε να συνδεθεί δεύτερο άτομο για να ξεκινήσει το παιχνίδι",
+          startingHand: []
+        });
+      });
+    })(req, res);
   });
 
+//our register route
+app.get("/register", function(req, res) {
+  res.render("register");
+});
+//our post from register form
+app.post("/register", function(req, res) {
+  //find how many players are registered
+  User.countDocuments(function(err, count) {
+    console.log('there are %d users', count);
+    usersInGame=count;
+  });
+  //the .register is a method from passportLocalMongoose
+  //which adds a new user to our DB
+  User.register({
+    username: req.body.username,
+    currentTurn:false
+  }, req.body.password, function(err, user) {
+    if (err) {
+      console.log(err);
+      res.redirect("/register");
+    } else {
+      //we authenticate the user and render the game page
+      passport.authenticate("local")(req, res, function() {
+        usersInGame++;
+        res.render("game", {
+          title: "Περιμένετε να συνδεθεί δεύτερο άτομο για να ξεκινήσει το παιχνίδι",
+          startingHand: []
+        });
+      });
+    }
+  });
+});
 
 
 
@@ -167,13 +254,14 @@ app.get("/cards", function(req, res) {
   });
 });
 
-app.post("/game",function(req,res){
+app.post("/game", function(req, res) {
 
-  res.render("game",{
+  res.render("game", {
     title: " Ξερη 2019",
-    startingHand:[]
+    startingHand: []
   });
 });
+
 
 //server start to port 3000
 server.listen(port, function(err) {
@@ -188,3 +276,5 @@ mongoose.connect("mongodb://localhost:27017/kseriDB", {
 }, function() {
   console.log("Database connected on port 27017");
 });
+//needed from Passport
+mongoose.set("useCreateIndex", true);

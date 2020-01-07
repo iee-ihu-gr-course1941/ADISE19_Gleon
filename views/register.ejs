@@ -1,0 +1,35 @@
+<%- include('partials/header'); -%>
+
+
+<div class="alert alert-primary alerts" role="alert">
+</div>
+<div class="alert alert-warning alerts" role="alert">
+</div>
+<div class="alert alert-danger alerts" role="alert">
+</div>
+<container name="login">
+  <div id="welcomeMsg">
+    <h1>Ξερή</h1>
+    <hr>
+    <h4>Λεωνίδης Γιώργος</h4>
+    <h6>Ανάπτυξη Διαδικτυακών Συστημάτων & Εφαρμογών</h6>
+    <hr>
+  </div>
+  <center>
+    <div id="login-form">
+      <form index="/register" method="post">
+        <div class="form-group">
+          <h2>Εγγραφή παίκτη</h2>
+          <label for="username">Όνομα χρήστη</label>
+          <input type="text" class="form-control" id="username" name="username">
+          <label for="username">Κωδικός</label>
+          <input type="password" class="form-control" id="password" name="password">
+        </div>
+        <input id="submitBtn" name="submitBtn" class="btn btn-primary" type="submit" value="Εγγραφή">
+      </form>
+      <a href="/">Αρχική</a>
+    </div>
+  </center>
+</container>
+
+<%- include('partials/footer'); -%>

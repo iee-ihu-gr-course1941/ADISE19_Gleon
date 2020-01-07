@@ -1,11 +1,13 @@
 //jshint esversion:6
 
 //socket initialisation
-var socket = io();
+const socket = io();
 //a boolean to check the game room
 var full = false;
 //player object
 var thePlayer;
+//user's session ID so we can pass it to his playerID
+var sessionID;
 
 //method to hide the alerts
 function hideSuccessAlert() {
@@ -92,9 +94,10 @@ $("#submitBtn").on("click", function(e) {
 
   //we save the username value
   var username = $("#username").val();
+  var password = $("#password").val();
   //the username must not be space
-  if (username == "") {
-    $(".alert-warning").text("Το όνομα χρήστη δε μπορεί να είναι κενό !");
+  if (username == "" || password=="") {
+    $(".alert-warning").text("Το όνομα χρήστη και ο κωδικός δεν μπορούν να είναι κενά !");
     $(".alert-warning").slideToggle(500);
     setTimeout(hideWarningAlert, 2500);
     //we prevent the form from submiting

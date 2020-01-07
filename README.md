@@ -30,12 +30,14 @@ Table of Contents
 
 ## Απαιτήσεις
 
+NodeJS
+mongoDB
 
 
 ## Οδηγίες Εγκατάστασης
 
- * test <br/>
-  `test`
+ * Στο command line γράφουμε <br/>
+  `npm install`
 
 ```
   test timestamptest
