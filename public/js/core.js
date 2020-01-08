@@ -6,8 +6,8 @@ const socket = io();
 var full = false;
 //player object
 var thePlayer;
-//user's session ID so we can pass it to his playerID
-var sessionID;
+//user's username in the db
+var playerUsername;
 
 //method to hide the alerts
 function hideSuccessAlert() {
@@ -35,29 +35,27 @@ socket.on("usersInGame", function(userInGame) {
 });
 
 //here we grap the players ID(color)
-socket.on("sendBackPlayer",function(player){
- alert(player.pID);
+socket.on("username",function(sid){
+ playerUsername=sid;
 });
 
 //here starts the game
 socket.on("gameOn",function(information){
-  console.log("P1 id : "+information.players[0].pID);
-  console.log("P2 id : "+information.players[1].pID);
-  console.log("Your id : "+thePlayer);
-  $("#title").text("Το παιχνίδι ξεκίνησε");
-  $("#title").append("<p>Είσαι ο παίκτης με το χρώμα</p>"+thePlayer.pID);
-  for (var i=0; i< 2 ;i++){
-    if (information.players[i].pID==playerID){
-      //automatically render the starting hand
-      $("#card"+i).append("<img src=\"images/"+information.players[i].startingHand[i].value+""+information.players[i].startingHand[i].suit+".png\" class=\"card-img-top\">");
-    }
-  }
+  console.log(information.players[0].startingHand);
+  $("#title").text("Το παιχνίδι είναι έτοιμο να ξεκινήσει");
+  $("#startGameForm").submit();
+
+      // for (var j=0;j<6;j++){
+      //   if (information.players[0].username==playerUsername){
+      //     //automatically render the starting hand
+      //     $("#card"+j).append("<img src=\"images/"+information.players[0].startingHand[j].value+""+information.players[0].startingHand[j].suit+".png\" class=\"card-img-top\">");
+      //   }else {
+      //     //automatically render the starting hand
+      //     $("#card"+j).append("<img src=\"images/"+information.players[1].startingHand[j].value+""+information.players[1].startingHand[j].suit+".png\" class=\"card-img-top\">");
+      //   }
+      // }
 });
 
-
-socket.on("test",function(players){
-  alert(players[0].pID);
-});
 
 //making cards draggable
 $(".playingCard").draggable({
