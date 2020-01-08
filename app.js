@@ -44,20 +44,14 @@ var players = [];
 //an array that indicates the current gameBoard
 var board = [];
 //a counter to check the players logged playing (2 max)
-var usersInGame=0;
+var usersInGame = 0;
 //a boolean to check if game is on
 var gameOn = false;
 
 
 //////////////////////////////////SESSION SETTINGS/////////////////////////////
-//function to generate a random ID
-//store user's session ID to send it back
-var currentSessionID;
 
-function genuuid() {
-  //18 byte length string
-  return uid.sync(18);
-}
+
 //we setup our session's info
 app.use(session({
   name: "sid",
@@ -65,6 +59,7 @@ app.use(session({
   resave: false,
   saveUninitialized: false
 }));
+//required code
 app.use(passport.initialize());
 app.use(passport.session());
 
@@ -113,7 +108,7 @@ const Deck = mongoose.model("deck", deckSchema);
 // });
 // newCard.save();
 
-//SOCKETS' MANAGEMENT
+//////////////////////////////SOCKETS' MANAGEMENT//////////////////////////////
 io.on('connection', function(socket) {
   //when a user connects
   // console.log("A user has connected");
@@ -144,24 +139,22 @@ io.on('connection', function(socket) {
       //doing the same for the second player
       players[1].startingHand = _.sampleSize(remainingCards, 6);
       remainingCards = _.difference(remainingCards, players[0].startingHand);
-      // sending to all clients in 'game' room, including sender
-      //we send the players and the remaining deck to our client to keep a track
-      if (!gameOn){
+      //if the game is not ON emit the start
+      if (!gameOn) {
         io.sockets.emit("gameOn", {
           players,
           remainingCards
         });
       }
-      gameOn=true;
+      //game is now on
+      gameOn = true;
     });
   });
 });
 
-
-
-
 // "/" HTTP requests
 app.route("/")
+  //GET to our home route
   .get(function(req, res) {
     console.log("This is the userID ");
     console.log(req.session.id);
@@ -173,46 +166,48 @@ app.route("/")
 
     res.render("index");
   })
-.post(function(req, res) {
-  const newUser = new User({
-    username: req.body.username,
-    password: req.body.password
-  });
-  passport.authenticate('local', function(err, user, info) {
-    // console.log("This is the info for the user : ");
-    // console.log(user);
-    players.push(user);
-    if (!user) {
-      return res.redirect('/');
-    }
-    req.login(newUser, function(err) {
-      if (err) {
-        console.log(err);
-      }
-      usersInGame++;
-      return res.render("game",{
-        title:"Παρακαλώ περιμένετε τον 2ο παίκτη",
-        startingHand:[]
-      });
+  //POST from our home route (login)
+  .post(function(req, res) {
+    const newUser = new User({
+      username: req.body.username,
+      password: req.body.password
     });
-  })(req, res);
-});
+    passport.authenticate('local', function(err, user, info) {
+      // console.log("This is the info for the user : ");
+      // console.log(user);
+      players.push(user);
+      if (!user) {
+        return res.redirect('/');
+      }
+      //since we found the user we now check if they typed their correct credentials
+      req.login(newUser, function(err) {
+        if (err) {
+          console.log(err);
+        }
+        //increment users
+        usersInGame++;
+        //render our main game page since everything went ok
+        return res.render("game", {
+          title: "Παρακαλώ περιμένετε τον 2ο παίκτη",
+          startingHand: []
+        });
+      });
+    })(req, res);
+  });
 
-app.post("/logout",function(req,res){
+//post /logout to kill our session and logout user
+app.post("/logout", function(req, res) {
   req.logout();
   res.redirect("/");
 });
-
-
 //our register route
 app.get("/register", function(req, res) {
-  if (req.isAuthenticated()){
+  if (req.isAuthenticated()) {
     usersInGame++;
     res.redirect("/game");
-  }else {
+  } else {
     res.render("register");
   }
-
 });
 //our post from register form
 app.post("/register", function(req, res) {
@@ -234,7 +229,6 @@ app.post("/register", function(req, res) {
       players.push(user);
       //we authenticate the user and render the game page
       passport.authenticate("local")(req, res, function() {
-      io.emit("username",req.user.username);
         usersInGame++;
         var title = "asdasd";
         return res.redirect("/game");
@@ -242,27 +236,6 @@ app.post("/register", function(req, res) {
     }
   });
 });
-
-//our main game's route
-// app.get("/game", function(req, res) {
-//
-//   //if the user is currently logged he will be redirected to the game
-//   if (req.isAuthenticated()){
-//     console.log(req.user);
-//     // console.log("This is the cookie status after login ");
-//     // console.log(req.session);
-//     res.render("game", {
-//       title: "Παρακαλώ περιμένετε για 2ο παίκτη",
-//       startingHand: []
-//     });
-//   //if the user is not registered he will be redirected to the home page
-//   }else {
-//     res.redirect("/");
-//   }
-//
-//
-// });
-
 app.get("/cards", function(req, res) {
   Card.find(function(err, foundItems) {
     res.send(foundItems);
@@ -272,12 +245,13 @@ app.get("/cards", function(req, res) {
     remainingCards = _.difference(foundItems, startingHand);
     console.log(startingHand);
     console.log(remainingCards);
-
   });
 });
 
+//when the game is ready to start we post /game
 app.post("/game", function(req, res) {
-  if (req.isAuthenticated()){
+  if (req.isAuthenticated()) {
+    //req.user now represents our Authenticated user
     console.log(req.user);
     res.render("game", {
       title: " Ξερη 2019",

@@ -44,7 +44,6 @@ socket.on("gameOn",function(information){
   console.log(information.players[0].startingHand);
   $("#title").text("Το παιχνίδι είναι έτοιμο να ξεκινήσει");
   $("#startGameForm").submit();
-
       // for (var j=0;j<6;j++){
       //   if (information.players[0].username==playerUsername){
       //     //automatically render the starting hand
