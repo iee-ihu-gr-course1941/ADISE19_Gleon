@@ -16,9 +16,9 @@ const session = require("express-session");
 const passport = require("passport");
 const uid = require('uid-safe');
 const passportLocalMongoose = require("passport-local-mongoose");
-
+const { addUser, removeUser, getUser, getUsersInRoom } = require('./users');
 //our port to connect
-const port = 3000;
+const port = process.env.PORT || 3000;
 //we start a new express app
 var app = express();
 //starting the server
@@ -123,7 +123,7 @@ io.on('connection', function(socket) {
   // });
 
   //send to client how many players are currently in the game
-  socket.emit("usersInGame", usersInGame);
+  // socket.emit("usersInGame", usersInGame);
 
   //on startGame handler which is sent from client when game is ready to start
   socket.on("startGame", function() {
@@ -185,7 +185,7 @@ app.route("/")
           console.log(err);
         }
         //increment users
-        usersInGame++;
+        // usersInGame++;
         //render our main game page since everything went ok
         return res.render("game", {
           title: "Παρακαλώ περιμένετε τον 2ο παίκτη",
@@ -203,8 +203,8 @@ app.post("/logout", function(req, res) {
 //our register route
 app.get("/register", function(req, res) {
   if (req.isAuthenticated()) {
-    usersInGame++;
-    res.redirect("/game");
+    // usersInGame++;
+    res.redirect("/");
   } else {
     res.render("register");
   }
@@ -229,9 +229,9 @@ app.post("/register", function(req, res) {
       players.push(user);
       //we authenticate the user and render the game page
       passport.authenticate("local")(req, res, function() {
-        usersInGame++;
+        // usersInGame++;
         var title = "asdasd";
-        return res.redirect("/game");
+        return res.redirect("/");
       });
     }
   });
@@ -254,7 +254,7 @@ app.post("/game", function(req, res) {
     //req.user now represents our Authenticated user
     console.log(req.user);
     res.render("game", {
-      title: " Ξερη 2019",
+      title: " Ξερη 2020",
       startingHand: req.user.startingHand
     });
   }
