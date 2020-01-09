@@ -16,7 +16,7 @@ const session = require("express-session");
 const passport = require("passport");
 const uid = require('uid-safe');
 const passportLocalMongoose = require("passport-local-mongoose");
-const { addUser, removeUser, getUser, getUsersInRoom } = require('./users');
+const { addUser, removeUser, getUser, getUsersInRoom, getUsers } = require('./users');
 //our port to connect
 const port = process.env.PORT || 3000;
 //we start a new express app
@@ -122,33 +122,46 @@ io.on('connection', function(socket) {
   //   console.log('A user disconnected');
   // });
 
-  //send to client how many players are currently in the game
-  // socket.emit("usersInGame", usersInGame);
+  socket.on("join" ,function(user,fn){
+    console.log(user);
+    socket.join(user.room);
+    addUser(socket.id,user.username,user.room);
+    console.log("Users currently in the room "+user.room);
+    console.log(getUsersInRoom(user.room));
+    fn(getUsersInRoom(user.room));
+
+
+  });
+
 
   //on startGame handler which is sent from client when game is ready to start
   socket.on("startGame", function() {
-
-    let remainingCards = [];
-    Card.find(function(err, foundItems) {
-      //with lodash we can get random 6 items from our cards db. Which is
-      //eventually our starting hand.
-      //We initialise the first player's hand
-      players[0].startingHand = _.sampleSize(foundItems, 6);
-      //we remove the cards from the rest deck
-      remainingCards = _.difference(foundItems, players[0].startingHand);
-      //doing the same for the second player
-      players[1].startingHand = _.sampleSize(remainingCards, 6);
-      remainingCards = _.difference(remainingCards, players[0].startingHand);
-      //if the game is not ON emit the start
-      if (!gameOn) {
-        io.sockets.emit("gameOn", {
-          players,
-          remainingCards
-        });
-      }
-      //game is now on
-      gameOn = true;
-    });
+    console.log("game has started");
+    const user = getUser(socket.id);
+    if (user){
+      io.to(user.room).emit("newGame");
+    }
+    // let remainingCards = [];
+    // Card.find(function(err, foundItems) {
+    //   //with lodash we can get random 6 items from our cards db. Which is
+    //   //eventually our starting hand.
+    //   //We initialise the first player's hand
+    //   players[0].startingHand = _.sampleSize(foundItems, 6);
+    //   //we remove the cards from the rest deck
+    //   remainingCards = _.difference(foundItems, players[0].startingHand);
+    //   //doing the same for the second player
+    //   players[1].startingHand = _.sampleSize(remainingCards, 6);
+    //   remainingCards = _.difference(remainingCards, players[0].startingHand);
+    //   //if the game is not ON emit the start
+    //   if (!gameOn) {
+    //     io.sockets.emit("gameOn", {
+    //       players,
+    //       remainingCards
+    //     });
+    //   }
+    //   //game is now on
+    //   gameOn = true;
+    // });
   });
 });
 
@@ -156,8 +169,7 @@ io.on('connection', function(socket) {
 app.route("/")
   //GET to our home route
   .get(function(req, res) {
-    console.log("This is the userID ");
-    console.log(req.session.id);
+
     //find how many players are registered
     // User.countDocuments(function(err, count) {
     //   console.log('there are %d users in our db', count);
