@@ -3,7 +3,7 @@
 <div class="container text-center">
 
 
-  <h2 id="title"><%= title %> </h2>
+  <h2 id="title">Ξερή 2020</h2>
 
 </div>
 
@@ -65,14 +65,21 @@
     </div>
   </div>
 </div>
+
 <div class="container text-center">
+  <label for="spin" class="loadingLabel"><%= title %> </label>
+  <div id="spin" class="spinner-border text-success" role="status">
+  <span class="sr-only ">Waiting other players</span>
+</div>
+  <form id="startGameForm" action="/game" method="post">
+    <button id="startButton" class="btn btn-success btn-sm" type="submit" name="startButton" disabled>Start Game</button>
+  </form>
+  <br>
   <form action="/logout" method="post">
-    <button class="btn btn-danger" type="submit" name="button">Exit Game</button>
+    <button class="btn btn-danger exitButton btn-sm" type="submit" name="exitButton">Exit Game</button>
   </form>
 
-<form id="startGameForm" action="/game" method="post">
 
-</form>
 </div>
 
 

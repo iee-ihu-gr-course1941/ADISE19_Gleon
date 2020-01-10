@@ -9,6 +9,7 @@ var thePlayer;
 //user's username in the db
 var playerUsername;
 
+
 //method to hide the alerts
 function hideSuccessAlert() {
   $(".alert-primary").slideToggle(500);
@@ -34,7 +35,33 @@ function hideLogin() {
 //   }
 // });
 
-socket.on("newGame",function(){
+
+
+socket.on("test", function() {
+  alert("TEST IS TRIGGERED");
+});
+
+socket.on("authenticatedJoin", function(user) {
+  let room = user.room;
+  alert("The user has now authenticated and joined the room");
+  alert(room);
+  socket.join(room);
+});
+
+  //we check if the room is full
+  socket.emit('checkRoom',function(room) {
+    console.log("This is people in the room");
+    console.log(room);
+    if (room===2){
+      $(".loadingLabel").text("Το παιχνίδι μπορεί να ξεκινήσει !");
+      $("#startButton").removeAttr("disabled");
+    }
+  });
+
+
+
+
+socket.on("newGame", function() {
   // THE GAME STARTS BUT THE COUNTER OF USERS IS 1 STEP BEHIND
   alert("new game has started");
 });
@@ -113,14 +140,5 @@ $("#submitBtn").on("click", function(e) {
     setTimeout(hideLogin);
     $(".alert-primary").slideToggle(500);
     setTimeout(hideSuccessAlert, 2500);
-    //we join our player to the room he specified
-    socket.emit("join", {
-      username,
-      room
-    },function(info){
-      if (info==2){
-        socket.emit("startGame");
-      }
-    });
   }
 });

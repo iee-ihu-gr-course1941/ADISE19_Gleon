@@ -5,13 +5,12 @@ var users = [];
 var cards = [];
 var usersinroom= [];
 
-
 function addUser(id,name,room){
   console.log(room);
-  if(!name || !room) return { error: 'Username and room are required.' };
-  usersinroom=getUsersInRoom(room);
+
+  usersInThisRoom=getUsersInRoom(room);
   const user = { id, name, room };
-  if(usersinroom!==2){
+  if(usersInThisRoom!==2){
     users.push(user);
   }
   console.log("this is the users array");
@@ -47,11 +46,20 @@ function getUser(id) {
   const user = users.find((user) => user.id === id);
 }
 
+function getRoom(id){
+  tempUser = _.find(users,{id:id});
+  return tempUser;
+
+}
+
 function getUsers(room) {
   //using lodash to find an array of users that are in room
   return _.filter(users,{room:room});
 }
 
+function getAllUsers (){
+  return users;
+}
 
 function getUsersInRoom(room) {
   //using lodash to find an array of users that are in room
@@ -63,5 +71,7 @@ module.exports = {
   removeUser,
   getUser,
   getUsersInRoom,
-  getUsers
+  getUsers,
+  getAllUsers,
+  getRoom
 };

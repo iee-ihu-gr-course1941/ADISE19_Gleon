@@ -16,7 +16,15 @@ const session = require("express-session");
 const passport = require("passport");
 const uid = require('uid-safe');
 const passportLocalMongoose = require("passport-local-mongoose");
-const { addUser, removeUser, getUser, getUsersInRoom, getUsers } = require('./users');
+const {
+  addUser,
+  removeUser,
+  getUser,
+  getUsersInRoom,
+  getUsers,
+  getAllUsers,
+  getRoom
+} = require('./users');
 //our port to connect
 const port = process.env.PORT || 3000;
 //we start a new express app
@@ -47,6 +55,8 @@ var board = [];
 var usersInGame = 0;
 //a boolean to check if game is on
 var gameOn = false;
+//temp socket id
+var tempSocket;
 
 
 //////////////////////////////////SESSION SETTINGS/////////////////////////////
@@ -74,6 +84,7 @@ const cardSchema = mongoose.Schema({
 const userSchema = mongoose.Schema({
   pName: String,
   password: String,
+  room: String,
   startingHand: [cardSchema],
   currentTurn: {
     required: true,
@@ -109,36 +120,39 @@ const Deck = mongoose.model("deck", deckSchema);
 // newCard.save();
 
 //////////////////////////////SOCKETS' MANAGEMENT//////////////////////////////
+
+
+
+
 io.on('connection', function(socket) {
   //when a user connects
   // console.log("A user has connected");
   //incrementing users by 1
   // users++;
   // console.log("current users are " + users);
+
+  //we check if the the room is full with callback to client with the number of players
+  socket.on('checkRoom', function (room) {
+    console.log("This is the room the user is ");
+      console.log(socket.id);
+      // let users = getUsersInRoom(roomName);
+      room(5);
+    });
+
+
+  tempSocket = socket.id;
+
   //when a user disconnets
-  // socket.on('disconnect', function() {
-  //   //decrement user upon leaving
-  //   users--;
-  //   console.log('A user disconnected');
-  // });
-
-  socket.on("join" ,function(user,fn){
-    console.log(user);
-    socket.join(user.room);
-    addUser(socket.id,user.username,user.room);
-    console.log("Users currently in the room "+user.room);
-    console.log(getUsersInRoom(user.room));
-    fn(getUsersInRoom(user.room));
-
-
+  socket.on('disconnect', function() {
+    // removeUser(socket.id);
+    console.log('A user disconnected');
   });
-
 
   //on startGame handler which is sent from client when game is ready to start
   socket.on("startGame", function() {
     console.log("game has started");
     const user = getUser(socket.id);
-    if (user){
+    if (user) {
       io.to(user.room).emit("newGame");
     }
     // let remainingCards = [];
@@ -170,6 +184,9 @@ app.route("/")
   //GET to our home route
   .get(function(req, res) {
 
+    console.log("Current players");
+    console.log(getAllUsers());
+    // io.to(`${tempSocket}`).emit("test");
     //find how many players are registered
     // User.countDocuments(function(err, count) {
     //   console.log('there are %d users in our db', count);
@@ -180,14 +197,21 @@ app.route("/")
   })
   //POST from our home route (login)
   .post(function(req, res) {
+    var username = req.body.username;
+    var password = req.body.password;
+    var room = req.body.room;
+
     const newUser = new User({
-      username: req.body.username,
-      password: req.body.password
+      username: username,
+      password: password,
+      room: room,
     });
     passport.authenticate('local', function(err, user, info) {
       // console.log("This is the info for the user : ");
       // console.log(user);
       players.push(user);
+
+      //passport searches our DB if there is user with that username
       if (!user) {
         return res.redirect('/');
       }
@@ -196,13 +220,32 @@ app.route("/")
         if (err) {
           console.log(err);
         }
-        //increment users
-        // usersInGame++;
-        //render our main game page since everything went ok
-        return res.render("game", {
-          title: "Παρακαλώ περιμένετε τον 2ο παίκτη",
-          startingHand: []
-        });
+        //Code below is after the user has been succesfully authenticated
+
+        //check if the room has space
+        let usersInRoom = getUsersInRoom(room);
+        if (usersInRoom >= 2) {
+          console.log("Room is full");
+          //if not redirect to home
+          return res.redirect('/');
+        } else {
+          //if there is room add the user in the room
+          addUser(tempSocket, username, room);
+          //send to the current socket
+          io.to(`${tempSocket}`).emit("authenticatedJoin", {
+            username,
+            room
+          });
+
+          //increment users
+          // usersInGame++;
+          //render our main game page since everything went ok
+          return res.render("game", {
+            title: "Παρακαλώ περιμένετε τον 2ο παίκτη",
+            startingHand: []
+          });
+        }
+
       });
     })(req, res);
   });
