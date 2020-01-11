@@ -4,6 +4,8 @@ const _ = require("lodash");
 var users = [];
 var cards = [];
 var usersinroom= [];
+var remainingCards = [];
+
 
 function addUser(id,name,room){
   console.log(room);
@@ -16,22 +18,12 @@ function addUser(id,name,room){
   console.log("this is the users array");
   console.log(users);
 }
-
-
-// const addUser = ({ id, name, room }) => {
-//   name = name.trim().toLowerCase();
-//   room = room.trim().toLowerCase();
-//
-//   if(!name || !room) return { error: 'Username and room are required.' };
-//   let usersinroom=getUsersInRoom(room);
-//   const user = { id, name, room };
-//   if(usersinroom.length!==2){
-//     users.push(user.name);
-//   }else{
-//     return { error: 'Room is full.' };
-//   }
-//   return { user };
-// };
+function setRemainingCards(cards){
+  remainingCards = cards;
+}
+function getRemainingCards(){
+  return remainingCards;
+}
 
 function setCards(cardsDB){
   cards=cardsDB;
@@ -73,5 +65,7 @@ module.exports = {
   getUsersInRoom,
   getUsers,
   getAllUsers,
-  getRoom
+  getRoom,
+  setRemainingCards,
+  getRemainingCards
 };

@@ -23,7 +23,9 @@ const {
   getUsersInRoom,
   getUsers,
   getAllUsers,
-  getRoom
+  getRoom,
+  setRemainingCards,
+  getRemainingCards
 } = require('./users');
 //our port to connect
 const port = process.env.PORT || 3000;
@@ -103,6 +105,10 @@ passport.deserializeUser(User.deserializeUser());
 
 //we create the collection (TABLE) where it will hold our cards
 const Card = mongoose.model("card", cardSchema);
+//we create the collection (TABLE) where it will hold our remainingCards
+const RemainingCards = mongoose.model("remaining card", cardSchema);
+//we create a temp table in our db with the current active players
+const UsersInGame = mongoose.model("user in game", userSchema);
 
 //we create our SCHEMA for the deck that will contain cards that use cardSchema
 const deckSchema = mongoose.Schema({
@@ -164,37 +170,104 @@ io.on('connection', function(socket) {
 
   //on startGame handler which is sent from client when game is ready to start
   socket.on("startGame", function() {
+
     console.log("game has started");
-    io.emit("newGame");
-    // let remainingCards = [];
-    // Card.find(function(err, foundItems) {
-    //   //with lodash we can get random 6 items from our cards db. Which is
-    //   //eventually our starting hand.
-    //   //We initialise the first player's hand
-    //   players[0].startingHand = _.sampleSize(foundItems, 6);
-    //   //we remove the cards from the rest deck
-    //   remainingCards = _.difference(foundItems, players[0].startingHand);
-    //   //doing the same for the second player
-    //   players[1].startingHand = _.sampleSize(remainingCards, 6);
-    //   remainingCards = _.difference(remainingCards, players[0].startingHand);
-    //   //if the game is not ON emit the start
-    //   if (!gameOn) {
-    //     io.sockets.emit("gameOn", {
-    //       players,
-    //       remainingCards
-    //     });
-    //   }
-    //   //game is now on
-    //   gameOn = true;
-    // });
   });
 });
+
+function initialCardDeal() {
+  Card.find(function(err, foundItems) {
+    //with lodash we can get random 6 items from our cards db. Which is
+    //eventually our starting hand.
+    //We initialise the first player's hand
+    //update the hand of the users
+    console.log("Those are all the remaining cards");
+    console.log(foundItems);
+    User.find(function(err, foundUsers) {
+      console.log("Those are all the users");
+      console.log(foundUsers);
+      let firstPlayerRandomCards = _.sampleSize(foundItems, 6);
+      console.log("foundUsers[0].username");
+      console.log(foundUsers[0].username);
+      console.log("foundUsers[1].username");
+      console.log(foundUsers[1].username);
+
+      User.updateOne({
+        username: foundUsers[0].username
+      }, {
+        set: {
+          startingHand: firstPlayerRandomCards
+        }
+      }, function(err, user) {
+        if (err) throw error;
+        console.log(user);
+        console.log("update user complete");
+      });
+      let remainingCards = _.difference(foundItems, firstPlayerRandomCards);
+      let secondPlayerRandomCards = _.sampleSize(remainingCards, 6);
+      User.updateOne({
+        username: foundUsers[1].username
+      }, {
+        set: {
+          "startingHand": secondPlayerRandomCards
+        }
+      });
+      remainingCards = _.difference(remainingCards, secondPlayerRandomCards);
+      setRemainingCards(remainingCards);
+      console.log("Player 1 random cards ");
+      console.log(firstPlayerRandomCards);
+      console.log("Player 2 random cards ");
+      console.log(secondPlayerRandomCards);
+      console.log("Remaining cards ");
+      console.log(remainingCards);
+    });
+  });
+}
+
+
+function dealCards() {
+  let remainingCards = getRemainingCards();
+  //with lodash we can get random 6 items from our cards db. Which is
+  //eventually our starting hand.
+  //We initialise the first player's hand
+  //update the hand of the users
+  console.log("Those are all the remaining cards");
+  console.log(remainingCards);
+  User.updateOne({
+    username: "esen"
+  }, {
+    currentTurn: True
+
+  });
+  User.find(function(err, foundUsers) {
+    firstPlayerRandomCards = _.sampleSize(remainingCards, 6);
+    User.updateOne({
+      username: foundUsers[0].username
+    }, {
+      set: {
+        startingHand: firstPlayerRandomCards
+      }
+    });
+    remainingCards = _.difference(foundItems, firstPlayerRandomCards);
+    secondPlayerRandomCards = _.sampleSize(remainingCards, 6);
+    User.updateOne({
+      username: foundUsers[1].username
+    }, {
+      startingHand: secondPlayerRandomCards
+
+    });
+    remainingCards = _.difference(remainingCards, secondPlayerRandomCards);
+    setRemainingCards(remainingCards);
+  });
+}
+
 
 // "/" HTTP requests
 app.route("/")
   //GET to our home route
   .get(function(req, res) {
-
+    initialCardDeal();
+    console.log(app.locals);
 
 
     // io.to(`${tempSocket}`).emit("test");
@@ -255,14 +328,17 @@ app.route("/")
           //render our main game page since everything went ok
           return res.render("game", {
             title: "Παρακαλώ περιμένετε τον 2ο παίκτη",
-            startingHand: []
+            startingHand: [],
+            currentUser: req.user
+            //callback to inform first player if room has filled
           }, function(err, info) {
-            if (err){
+            if (err) {
               console.log(err);
-            }else {
+            } else {
               res.render("game", {
                 title: "Παρακαλώ περιμένετε τον 2ο παίκτη",
-                startingHand: []
+                startingHand: [],
+                currentUser: req.user
               });
               var tempUsers = getAllUsers();
               io.sockets.emit('checkRoom', tempUsers);
@@ -275,11 +351,13 @@ app.route("/")
 //when the game is ready to start we post /game
 app.get("/game", function(req, res) {
   if (req.isAuthenticated()) {
+
     //req.user now represents our Authenticated user
     console.log(req.user);
     res.render("game", {
       title: " Ξερη 2020",
-      startingHand: req.user.startingHand
+      startingHand: req.user.startingHand,
+      currentUser: req.user
     });
   } else {
     res.redirect("/");
@@ -293,7 +371,8 @@ app.post("/game", function(req, res) {
     console.log(req.user);
     res.render("game", {
       title: " Ξερη 2020",
-      startingHand: req.user.startingHand
+      startingHand: req.user.startingHand,
+      currentUser: req.user
     });
   }
 });
@@ -331,8 +410,6 @@ app.post("/register", function(req, res) {
       players.push(user);
       //we authenticate the user and render the game page
       passport.authenticate("local")(req, res, function() {
-        // usersInGame++;
-        var title = "asdasd";
         return res.redirect("/");
       });
     }

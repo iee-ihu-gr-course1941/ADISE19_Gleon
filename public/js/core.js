@@ -8,7 +8,8 @@ var full = false;
 var thePlayer;
 //user's username in the db
 var playerUsername;
-
+//bool to check if game is on
+var gameIsOn = false;
 
 //method to hide the alerts
 function hideSuccessAlert() {
@@ -35,11 +36,6 @@ function hideLogin() {
 //   }
 // });
 
-
-
-socket.on("test", function() {
-  alert("TEST IS TRIGGERED");
-});
 
 socket.on("authenticatedJoin", function(user) {
   let room = user.room;
@@ -79,22 +75,6 @@ socket.on("newGame", function() {
   $("#spin").hide();
 });
 
-//here starts the game
-socket.on("gameOn", function(information) {
-  console.log(information.players[0].startingHand);
-  $("#title").text("Το παιχνίδι είναι έτοιμο να ξεκινήσει");
-  $("#startGameForm").submit();
-  // for (var j=0;j<6;j++){
-  //   if (information.players[0].username==playerUsername){
-  //     //automatically render the starting hand
-  //     $("#card"+j).append("<img src=\"images/"+information.players[0].startingHand[j].value+""+information.players[0].startingHand[j].suit+".png\" class=\"card-img-top\">");
-  //   }else {
-  //     //automatically render the starting hand
-  //     $("#card"+j).append("<img src=\"images/"+information.players[1].startingHand[j].value+""+information.players[1].startingHand[j].suit+".png\" class=\"card-img-top\">");
-  //   }
-  // }
-});
-
 
 //making cards draggable
 $(".playingCard").draggable({
@@ -126,6 +106,7 @@ $("#tablePicture").droppable({
 });
 
 $("#startButton").on("click",function(e){
+  
   socket.emit("startGame");
 });
 

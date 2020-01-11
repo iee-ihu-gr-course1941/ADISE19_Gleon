@@ -1,14 +1,23 @@
+/* IMPORTED Fonts
+font-family: 'Dancing Script', cursive;
+font-family: 'Jura', sans-serif;
+font-family: 'Open Sans Condensed', sans-serif; */
+
+
 #login-form {
   text-align: center;
   border-radius: 10px;
   width: max-content;
   height: max-content;
   padding: 4vmin;
-  background-color: #B0D9C1;
+  background-color: #2c7873;
   position: relative;
   top: 10px;
 }
-
+#usernameText{
+  color:#f6f4e6;
+  text-shadow: 2px 2px black;
+}
 #tablePicture{
   width:650px;
 }
@@ -16,20 +25,47 @@
 #welcomeMsg {
   text-align: center;
   color: #B0D9C1;
-  font-family: 'GFS Didot', serif;
+}
+/* COLOR ASINGMENT */
+.creatorName,.headerTitle,h4,h3,h2,a,.bottomCreator{
+  color:#ffdc34;
+}
+label{
+  color:#effffb;
+  font-weight: bold;
+
 }
 
+/* FONT ASSIGN Jura */
+.form-group,#welcomeMsg,h4,.loadingLabel,.form-control{
+  font-family: 'Jura', sans-serif;
+}
+/* FONT ASSIGN Jura Open Sans Condensed*/
+h1,h3,#usernameText,h2,.btn,a,.mainPageCredentials{
+  font-family: 'Open Sans Condensed', sans-serif;
+}
+
+
+hr{
+  width: 50px;
+  border-style:dotted;
+  display: block;
+  padding: 0;
+  border-radius: 0;
+  border-width: 5px;
+  border-top:0;
+  border-color:#4dd599;
+}
 
 body {
   margin: 0;
   padding: 0;
-  background-color: #03733F;
+  background-color: #110133;
   height: 600px;
 }
 
 h1 {
   font-size: 300%;
-  font-family: 'Comfortaa', cursive;
 }
 
 .alert {
@@ -87,4 +123,15 @@ h1 {
 .loadingLabel{
   font-weight:bold;
   font-size:3vmin;
+}
+.mainPageCredentials{
+  font-size: 7vmin;
+  padding: 0;
+}
+.bottomCreator{
+  font-size: 4vmin;
+  font-family: 'Dancing Script', cursive;
+}
+.form-control{
+  font-weight: bold;
 }

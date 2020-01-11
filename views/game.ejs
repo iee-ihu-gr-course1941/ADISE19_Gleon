@@ -4,6 +4,7 @@
 
 
   <h2 id="title">Ξερή 2020</h2>
+  <h3>Καλώς ήρθες <span id="usernameText"><%=currentUser.username%></span></h3>
 
 </div>
 
@@ -38,17 +39,16 @@
         <span class="sr-only ">Waiting other players</span>
       </div>
       <br>
-
-      <button id="startButton" class="btn btn-success btn-sm" type="submit" name="startButton" disabled>Start Game</button>
-      <br>
-
+      <form action="/game" method="post">
+        <button id="startButton" class="btn btn-success btn-sm" type="submit" name="startButton" disabled>Start Game</button>
+      </form>
       <br>
       <form action="/logout" method="post">
         <button class="btn btn-danger exitButton btn-sm" type="submit" name="exitButton">Exit Game</button>
       </form>
-
-
     </div>
 
-
+    <form action="/turnPlayed" method="post">
+      <input type="hidden" name="cardPlayed" value="">
+    </form>
     <%- include('partials/footer'); -%>
