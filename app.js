@@ -132,29 +132,40 @@ io.on('connection', function(socket) {
   // console.log("current users are " + users);
 
   //we check if the the room is full with callback to client with the number of players
-  socket.on('checkRoom', function (room) {
-    console.log("This is the room the user is ");
-      console.log(socket.id);
-      // let users = getUsersInRoom(roomName);
-      room(5);
-    });
+  socket.on('checkRoom', function(room) {
+    // let users = getUsersInRoom(roomName);
+    var tempUsers = getAllUsers();
+    room(tempUsers);
+  });
+  socket.on("joinRoom", function(room) {
+    socket.join(`${room}`, function() {
+      //gives back the connected sockets to the specific room
+      clients = io.sockets.adapter.rooms[`${room}`].sockets;
 
+
+      console.log("Checking clients in this room");
+      console.log(clients);
+      // let rooms = Object.keys(socket.rooms);
+      // console.log(rooms); // [ <socket.id>, 'room 237' ]
+      io.to(`${room}`).emit('a new user has joined the room'); // broadcast to everyone in the room
+    });
+  });
+
+
+  // io.in('game').emit('big-announcement', 'the game will start soon');
 
   tempSocket = socket.id;
 
   //when a user disconnets
   socket.on('disconnect', function() {
-    // removeUser(socket.id);
+    removeUser(socket.id);
     console.log('A user disconnected');
   });
 
   //on startGame handler which is sent from client when game is ready to start
   socket.on("startGame", function() {
     console.log("game has started");
-    const user = getUser(socket.id);
-    if (user) {
-      io.to(user.room).emit("newGame");
-    }
+    io.emit("newGame");
     // let remainingCards = [];
     // Card.find(function(err, foundItems) {
     //   //with lodash we can get random 6 items from our cards db. Which is
@@ -184,8 +195,8 @@ app.route("/")
   //GET to our home route
   .get(function(req, res) {
 
-    console.log("Current players");
-    console.log(getAllUsers());
+
+
     // io.to(`${tempSocket}`).emit("test");
     //find how many players are registered
     // User.countDocuments(function(err, count) {
@@ -230,26 +241,62 @@ app.route("/")
           return res.redirect('/');
         } else {
           //if there is room add the user in the room
-          addUser(tempSocket, username, room);
-          //send to the current socket
-          io.to(`${tempSocket}`).emit("authenticatedJoin", {
-            username,
-            room
-          });
+          addUser(req.user._id, req.user.username, room);
 
+
+          //send to the current socket
+          // io.to(`${tempSocket}`).emit("authenticatedJoin", {
+          //   username,
+          //   room
+          // });
           //increment users
           // usersInGame++;
+
           //render our main game page since everything went ok
           return res.render("game", {
             title: "Παρακαλώ περιμένετε τον 2ο παίκτη",
             startingHand: []
+          }, function(err, info) {
+            if (err){
+              console.log(err);
+            }else {
+              res.render("game", {
+                title: "Παρακαλώ περιμένετε τον 2ο παίκτη",
+                startingHand: []
+              });
+              var tempUsers = getAllUsers();
+              io.sockets.emit('checkRoom', tempUsers);
+            }
           });
         }
-
       });
     })(req, res);
   });
+//when the game is ready to start we post /game
+app.get("/game", function(req, res) {
+  if (req.isAuthenticated()) {
+    //req.user now represents our Authenticated user
+    console.log(req.user);
+    res.render("game", {
+      title: " Ξερη 2020",
+      startingHand: req.user.startingHand
+    });
+  } else {
+    res.redirect("/");
+  }
+});
 
+//when the game is ready to start we post /game
+app.post("/game", function(req, res) {
+  if (req.isAuthenticated()) {
+    //req.user now represents our Authenticated user
+    console.log(req.user);
+    res.render("game", {
+      title: " Ξερη 2020",
+      startingHand: req.user.startingHand
+    });
+  }
+});
 //post /logout to kill our session and logout user
 app.post("/logout", function(req, res) {
   req.logout();
@@ -303,17 +350,7 @@ app.get("/cards", function(req, res) {
   });
 });
 
-//when the game is ready to start we post /game
-app.post("/game", function(req, res) {
-  if (req.isAuthenticated()) {
-    //req.user now represents our Authenticated user
-    console.log(req.user);
-    res.render("game", {
-      title: " Ξερη 2020",
-      startingHand: req.user.startingHand
-    });
-  }
-});
+
 
 
 //server start to port 3000

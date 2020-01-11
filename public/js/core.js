@@ -43,27 +43,40 @@ socket.on("test", function() {
 
 socket.on("authenticatedJoin", function(user) {
   let room = user.room;
-  alert("The user has now authenticated and joined the room");
-  alert(room);
-  socket.join(room);
+  socket.emit("joinRoom",room);
+
+
 });
 
-  //we check if the room is full
-  socket.emit('checkRoom',function(room) {
-    console.log("This is people in the room");
-    console.log(room);
-    if (room===2){
-      $(".loadingLabel").text("Το παιχνίδι μπορεί να ξεκινήσει !");
-      $("#startButton").removeAttr("disabled");
-    }
-  });
+//we check if the room is full
+// socket.emit('checkRoom', function(room) {
+//   console.log("Checking users in room");
+//   console.log(room);
+//   if (room === 2) {
+//     $(".loadingLabel").text("Το παιχνίδι μπορεί να ξεκινήσει !");
+//     $("#startButton").removeAttr("disabled").removeClass("btn-sm").addClass("btn-lg");
+//
+//     $("#spin").hide();
+//   }
+// });
+
+//checking always if room has 2 players
+socket.on("checkRoom",function(users){
+  if (users === 2) {
+    $(".loadingLabel").text("Το παιχνίδι μπορεί να ξεκινήσει !");
+    $("#startButton").removeAttr("disabled").removeClass("btn-sm").addClass("btn-lg");
+    $("#spin").hide();
+  }
+});
 
 
 
 
 socket.on("newGame", function() {
-  // THE GAME STARTS BUT THE COUNTER OF USERS IS 1 STEP BEHIND
-  alert("new game has started");
+  // The game now starts for everyone
+  $(".loadingLabel").text("Το παιχνίδι έχει ξεκινήσει !");
+  $("#startButton").hide();
+  $("#spin").hide();
 });
 
 //here starts the game
@@ -112,6 +125,9 @@ $("#tablePicture").droppable({
   }
 });
 
+$("#startButton").on("click",function(e){
+  socket.emit("startGame");
+});
 
 // submit button on click event
 $("#submitBtn").on("click", function(e) {

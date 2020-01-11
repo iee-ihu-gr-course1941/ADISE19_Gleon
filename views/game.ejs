@@ -8,7 +8,7 @@
 </div>
 
 
-<div class="container">
+<div class="container text-center">
   <div class="trapezi">
     <img id="tablePicture" src="images/trapezi.png">
   </div>
@@ -30,57 +30,25 @@
   </div>
 </div>
 
-<div class="container">
-  <div class="playerHand">
-    <div class="row">
-      <div class="col-lg-2 col-md-2 col-sm-2 col-xs-2" >
-        <div class="playingCard" id="card0">
-        </div>
-      </div>
-      <div class="col-lg-2 col-md-2 col-sm-2 col-xs-2" >
-        <div class="playingCard" id="card1">
-          <img src="" class="card-img-top">
-        </div>
-      </div>
-      <div class="col-lg-2 col-md-2 col-sm-2 col-xs-2" >
-        <div class="playingCard" id="card2">
-          <img src="" class="card-img-top">
-        </div>
-      </div>
-      <div class="col-lg-2 col-md-2 col-sm-2 col-xs-2" >
-        <div class="playingCard" id="card3">
-          <img src="" class="card-img-top">
-        </div>
-      </div>
-      <div class="col-lg-2 col-md-2 col-sm-2 col-xs-2" >
-        <div class="playingCard" id="card4">
-          <img src="" class="card-img-top">
-        </div>
-      </div>
-      <div class="col-lg-2 col-md-2 col-sm-2 col-xs-2" >
-        <div class="playingCard" id="card5">
-          <img src="" class="card-img-top">
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
+
 
 <div class="container text-center">
   <label for="spin" class="loadingLabel"><%= title %> </label>
-  <div id="spin" class="spinner-border text-success" role="status">
-  <span class="sr-only ">Waiting other players</span>
-</div>
-  <form id="startGameForm" action="/game" method="post">
-    <button id="startButton" class="btn btn-success btn-sm" type="submit" name="startButton" disabled>Start Game</button>
-  </form>
-  <br>
-  <form action="/logout" method="post">
-    <button class="btn btn-danger exitButton btn-sm" type="submit" name="exitButton">Exit Game</button>
-  </form>
+      <div id="spin" class="spinner-border text-success" role="status">
+        <span class="sr-only ">Waiting other players</span>
+      </div>
+      <br>
+
+      <button id="startButton" class="btn btn-success btn-sm" type="submit" name="startButton" disabled>Start Game</button>
+      <br>
+
+      <br>
+      <form action="/logout" method="post">
+        <button class="btn btn-danger exitButton btn-sm" type="submit" name="exitButton">Exit Game</button>
+      </form>
 
 
-</div>
+    </div>
 
 
-<%- include('partials/footer'); -%>
+    <%- include('partials/footer'); -%>

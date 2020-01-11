@@ -58,7 +58,7 @@ function getUsers(room) {
 }
 
 function getAllUsers (){
-  return users;
+  return users.length;
 }
 
 function getUsersInRoom(room) {
