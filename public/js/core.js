@@ -85,14 +85,11 @@ $("#tablePicture").droppable({
   accept: ".playingCard",
   //drop function to get info about what card was dropped and who dropped it
   drop: function(event, ui) {
-    console.log(event);
-    console.log(ui);
     //disable dragging after card being dropped
     $(ui.draggable).draggable('disable');
     //parent card ID
-    var droppedItemId = ui.draggable.attr("id");
-
-    console.log(droppedItemId);
+    var droppedItemValue = ui.draggable.attr("cardValue");
+    var droppedItemSuit = ui.draggable.attr("cardSuit");
     //automatically center dropped card
     ui.draggable.position({
       my: "center",
@@ -102,11 +99,14 @@ $("#tablePicture").droppable({
         $(this).animate(pos, "slow", "linear");
       }
     });
+    $(".cardValue").val(droppedItemValue);
+    $(".cardSuit").val(droppedItemSuit);
+    $("#update").submit();
   }
 });
 
 $("#startButton").on("click",function(e){
-  
+
   socket.emit("startGame");
 });
 

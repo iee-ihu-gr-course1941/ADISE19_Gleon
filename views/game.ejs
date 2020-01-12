@@ -9,10 +9,20 @@
 </div>
 
 
-<div class="container text-center">
-  <div class="trapezi">
+
+
+
+<div class="container text-center trapezi">
     <img id="tablePicture" src="images/trapezi.png">
-  </div>
+    <div class="container ">
+      <div class="row cardsPlayedFrame">
+        <%for (var i=0; i< board.length ;i++){%>
+        <div class="col-lg-2 col-md-2 col-sm-2 col-xs-2">
+            <img src="images/<%=board[i]%>.png" class="card-img-top cardPlayedOnBoard">
+        </div>
+        <%}%>
+      </div>
+    </div>
 </div>
 
 
@@ -22,7 +32,7 @@
     <div class="row">
       <%for (var i=0; i< startingHand.length ;i++){%>
       <div class="col-lg-2 col-md-2 col-sm-2 col-xs-2">
-        <div class="playingCard" id="<%=startingHand[i]._id%>">
+        <div class="playingCard" cardValue="<%=startingHand[i].value%>" cardSuit="<%=startingHand[i].suit%>">
           <img src="images/<%=startingHand[i].value%><%=startingHand[i].suit%>.png" class="card-img-top">
         </div>
       </div>
@@ -48,7 +58,8 @@
       </form>
     </div>
 
-    <form action="/turnPlayed" method="post">
-      <input type="hidden" name="cardPlayed" value="">
+    <form id="update" action="/update" method="post">
+      <input class="cardValue" type="hidden" name="cardValue" value="">
+      <input class="cardSuit" type="hidden" name="cardSuit" value="">
     </form>
     <%- include('partials/footer'); -%>
