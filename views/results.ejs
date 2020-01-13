@@ -1,0 +1,54 @@
+<%- include('partials/header'); -%>
+
+<div class="alert alert-primary alerts" role="alert">
+</div>
+<div class="alert alert-warning alerts" role="alert">
+</div>
+<div class="alert alert-danger alerts" role="alert">
+</div>
+<container name="login">
+  <div id="welcomeMsg">
+    <h1 class="headerTitle">Online Ξερή</h1>
+    <div class="container mainPageCredentials">
+      <hr>
+      <p class="creatorName">Λεωνίδης Γιώργος</p>
+      <h6>Ανάπτυξη Διαδικτυακών Συστημάτων & Εφαρμογών</h6>
+    </div>
+  </div>
+  <br>
+  <div class="container text-center">
+    <button type="button" class="btn btn-primary">
+      Users found in database <span class="badge badge-light"><%=results.length%></span>
+    </button>
+  </div>
+  <br>
+
+  <div class="container text-center results">
+    <% for (var i=0;i<results.length;i++){%>
+      <ul class="list-group">
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+          Username
+            <span class="badge badge-primary badge-pill"><%=results[i].username%></span>
+        </li>
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+          ID
+          <span class="badge badge-primary badge-pill"><%=results[i]._id%></span>
+        </li>
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+          Current Turn
+          <span class="badge badge-primary badge-pill"><%=results[i].currentTurn%></span>
+        </li>
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+          Number of cards holding
+          <span class="badge badge-primary badge-pill"><%=results[i].startingHand.length%></span>
+        </li>
+      </ul>
+      <br>
+
+    <%}%>
+
+  </div>
+
+</container>
+
+<%- include('partials/footer'); -%>

@@ -15,10 +15,10 @@ const {
   addUser,
   removeUser,
   getUser,
-  getUsersInRoom,
   getUsers,
   getAllUsers,
   getRoom,
+  resetGame,
   setRemainingCards,
   getRemainingCards
 } = require('./users');
@@ -37,12 +37,12 @@ app.use(bodyParser.urlencoded({
   extended: true
 }));
 //we need to specify the folder that will use our application's resources
-app.use(express.static("public"));
+app.use(express.static(__dirname +"/public"));
 
 //a counter to check the players logged playing (2 max)
 var usersInGame = 0;
 //a boolean to check if game is on
-var gameOn = false;
+var gameOn;
 //an array that represents the current gameBoard
 var board = [];
 
@@ -111,20 +111,22 @@ const Deck = mongoose.model("deck", deckSchema);
 // newCard.save();
 
 //////////////////////////////SOCKETS' MANAGEMENT//////////////////////////////
-
 io.on('connection', function(socket) {
   //we check if the the room is full with callback to client with the number of players
-  socket.on('checkRoom', function(room) {
-    // let users = getUsersInRoom(roomName);
-    var tempUsers = getAllUsers();
-    room(tempUsers);
-  });
 
   socket.on("startGame", function() {
-    swapTurn();
+    gameOn = true;
+    initialCardDeal();
+    turn();
     socket.broadcast.emit("refresh");
   });
+  //if game has not started we always check if the room has filled
+  if (!gameOn){
+    let tempUsers = getAllUsers();
+    io.sockets.emit('checkRoom', tempUsers);
+  }
 });
+
 
 //function for the initial card deal
 function initialCardDeal() {
@@ -139,40 +141,40 @@ function initialCardDeal() {
     //We initialise the first player's hand
     //update the hand of the users
     tempItems = foundItems;
-  });
-
-  //accesing all our users and giving the first two players random cards
-  User.find(function(err, foundUsers) {
-
-    // PLAYER 1 UPDATE
-    firstPlayerRandomCards = _.sampleSize(tempItems, 6);
-    remainingCards = _.difference(tempItems, firstPlayerRandomCards);
-    User.updateOne({
-      username: foundUsers[0].username
-    }, {
-      startingHand: firstPlayerRandomCards
-    }, function(err, user) {
-      if (err) {
-        console.log(err);
-      } else {
-        console.log("User updated");
-      }
-    });
-
-    // PLAYER 2 UPDATE
-    secondPlayerRandomCards = _.sampleSize(remainingCards, 6);
-    remainingCards = _.difference(remainingCards, secondPlayerRandomCards);
-    setRemainingCards(remainingCards);
-    User.updateOne({
-      username: foundUsers[1].username
-    }, {
-      startingHand: secondPlayerRandomCards
-    }, function(err, user) {
-      if (err) {
-        console.log(err);
-      } else {
-        console.log("User updated");
-      }
+    User.find(function(err, foundUsers) {
+      // PLAYER 1 UPDATE
+      firstPlayerRandomCards = _.sampleSize(foundItems, 6);
+      remainingCards = _.difference(foundItems, firstPlayerRandomCards);
+      console.log("THIS IS PLAYER 1 HAND ");
+      console.log(firstPlayerRandomCards);
+      User.updateOne({
+        username: foundUsers[0].username
+      }, {
+        startingHand: firstPlayerRandomCards
+      }, function(err, user) {
+        if (err) {
+          console.log(err);
+        } else {
+          console.log("User updated");
+        }
+      });
+      // PLAYER 2 UPDATE
+      secondPlayerRandomCards = _.sampleSize(remainingCards, 6);
+      remainingCards = _.difference(remainingCards, secondPlayerRandomCards);
+      setRemainingCards(remainingCards);
+      console.log("THIS IS PLAYER 2 HAND ");
+      console.log(secondPlayerRandomCards);
+      User.updateOne({
+        username: foundUsers[1].username
+      }, {
+        startingHand: secondPlayerRandomCards
+      }, function(err, user) {
+        if (err) {
+          console.log(err);
+        } else {
+          console.log("User updated");
+        }
+      });
     });
   });
 }
@@ -223,9 +225,9 @@ function dealCards() {
 }
 
 //function to remove a card from the hand when it's played
-function removeCardFromDeck(value, suit) {
+function removeCardFromDeck(user,value, suit) {
   //we remove the card played from the array
-  User.updateOne({}, {
+  User.updateOne({username:user}, {
     "$pull": {
       startingHand: {
         value: value,
@@ -244,11 +246,12 @@ function removeCardFromDeck(value, suit) {
   });
 
   let cardPlayed = value + suit;
+  //we add the card player in our board to populate
   board.push(cardPlayed);
 }
 
 //function to swap turns
-function swapTurn() {
+function turn() {
   User.find(function(err, foundUsers) {
     if (err) {
       console.log(err);
@@ -318,19 +321,12 @@ function swapTurn() {
   });
 }
 
+
+
 // HOME "/" HTTP requests
 app.route("/")
   //GET to our home route
   .get(function(req, res) {
-
-
-    // io.to(`${tempSocket}`).emit("test");
-    //find how many players are registered
-    // User.countDocuments(function(err, count) {
-    //   console.log('there are %d users in our db', count);
-    //   usersInGame = count;
-    // });
-
     res.render("index");
   })
   //POST from our home route (login)
@@ -344,66 +340,48 @@ app.route("/")
       password: password,
       room: room,
     });
-    passport.authenticate('local', function(err, user, info) {
-      // console.log("This is the info for the user : ");
-      // console.log(user);
-      players.push(user);
+    var tempUsers = getAllUsers();
 
-      //passport searches our DB if there is user with that username
-      if (!user) {
-        return res.redirect('/');
-      }
-      //since we found the user we now check if they typed their correct credentials
-      req.login(newUser, function(err) {
-        if (err) {
-          console.log(err);
-        }
-        //Code below is after the user has been succesfully authenticated
-
-        //check if the room has space
-        let usersInRoom = getUsersInRoom(room);
-        if (usersInRoom >= 2) {
-          console.log("Room is full");
-          //if not redirect to home
+    if (tempUsers<2){
+      passport.authenticate('local', function(err, user, info) {
+        //passport searches our DB if there is user with that username
+        if (!user) {
           return res.redirect('/');
-        } else {
+        }
+        //since we found the user we now check if they typed their correct credentials
+        req.login(newUser, function(err) {
+          if (err) {
+            console.log(err);
+          }
+          //Code below is after the user has been succesfully authenticated
           //if there is space in room add the user in the room
-          addUser(req.user._id, req.user.username, room);
-
+          addUser(req.user);
           //render our main game page since everything went ok
-          return res.render("game", {
+          return res.render("game",
+           {
             gameOn: gameOn,
             startingHand: [],
             board: [],
             currentUser: req.user
-            //callback to inform first player if room has filled
-          }, function(err, info) {
-            if (err) {
-              console.log(err);
-            } else {
-              res.render("game", {
-                gameOn: gameOn,
-                startingHand: [],
-                board: [],
-                currentUser: req.user
-              });
-              var tempUsers = getAllUsers();
-              io.sockets.emit('checkRoom', tempUsers);
-            }
           });
-        }
-      });
-    })(req, res);
+        });
+      })(req, res);
+    }else {
+      console.log("Game room is full");
+      res.redirect("/");
+    }
   });
 
 //when a move is made
 app.post("/update", function(req, res) {
+  console.log("THIS IS THE PLAYER THAT DID THE MOVE ");
+  console.log(req.user);
   console.log("This is the card VALUE");
   console.log(req.body.cardValue);
   console.log("This is the card SUIT");
   console.log(req.body.cardSuit);
-  removeCardFromDeck(req.body.cardValue, req.body.cardSuit);
-  swapTurn();
+  removeCardFromDeck(req.user.username,req.body.cardValue, req.body.cardSuit);
+  turn();
   io.emit("update");
   res.redirect("/game");
 });
@@ -411,6 +389,7 @@ app.post("/update", function(req, res) {
 //when the game is ready to start we post /game
 app.get("/game", function(req, res) {
   if (req.isAuthenticated()) {
+
     //req.user now represents our Authenticated user
     res.render("game", {
       gameOn: gameOn,
@@ -425,8 +404,6 @@ app.get("/game", function(req, res) {
 //when the game is ready to start we post /game
 app.post("/game", function(req, res) {
   if (req.isAuthenticated()) {
-    gameOn = true;
-    initialCardDeal();
     //req.user now represents our Authenticated user
     res.render("game", {
       gameOn: gameOn,
@@ -436,6 +413,33 @@ app.post("/game", function(req, res) {
     });
   }
 });
+
+app.get("/users",function(req,res){
+  User.find(function(err,users){
+    console.log(users);
+    res.render("results",{
+      results:users
+    });
+  });
+});
+app.get("/users/:u",function(req,res){
+  console.log(req.params);
+  User.find({username:req.params.u},function(err,user){
+    if (err){
+      console.log(err);
+    }else {
+      if (user.length===0){
+        res.render("results",{
+          results:user
+        });
+      }else {
+        res.render("results",{
+          results:user
+        });
+      }
+    }
+  });
+});
 //post /logout to kill our session and logout user
 app.post("/logout", function(req, res) {
   req.logout();
@@ -443,12 +447,7 @@ app.post("/logout", function(req, res) {
 });
 //our register route
 app.get("/register", function(req, res) {
-  if (req.isAuthenticated()) {
-    // usersInGame++;
-    res.redirect("/");
-  } else {
     res.render("register");
-  }
 });
 //our POST from register form
 app.post("/register", function(req, res) {

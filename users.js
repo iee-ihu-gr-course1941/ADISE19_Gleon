@@ -3,20 +3,26 @@ const _ = require("lodash");
 
 var users = [];
 var cards = [];
-var usersinroom= [];
 var remainingCards = [];
 
-
-function addUser(id,name,room){
-  console.log(room);
-
-  usersInThisRoom=getUsersInRoom(room);
-  const user = { id, name, room };
-  if(usersInThisRoom!==2){
-    users.push(user);
-  }
-
+function resetGame(){
+  users = [];
 }
+
+function addUser(user){
+  activeUsers=getAllUsers ();
+  let newUser = user;
+  if(activeUsers!==2){
+    users.push(newUser);
+  }
+  console.log("A player is now in the game :");
+  console.log(newUser);
+}
+
+function getAllUsers (){
+  return users.length;
+}
+
 function setRemainingCards(cards){
   remainingCards = cards;
 }
@@ -47,24 +53,14 @@ function getUsers(room) {
   //using lodash to find an array of users that are in room
   return _.filter(users,{room:room});
 }
-
-function getAllUsers (){
-  return users.length;
-}
-
-function getUsersInRoom(room) {
-  //using lodash to find an array of users that are in room
-  return _.filter(users,{room:room}).length;
-}
-
 module.exports = {
   addUser,
   removeUser,
   getUser,
-  getUsersInRoom,
   getUsers,
   getAllUsers,
   getRoom,
+  resetGame,
   setRemainingCards,
   getRemainingCards
 };
