@@ -1,53 +1,57 @@
 <%- include('partials/header'); -%>
-
+<script src="jquery-ui-1.12.1/external/jquery/jquery.js"></script>
+<script src="jquery-ui-1.12.1/jquery-ui.min.js"></script>
 <div class="container text-center">
 
 
   <h2 id="title">Ξερή 2020</h2>
   <h3>Καλώς ήρθες <span id="usernameText"><%=currentUser.username%></span></h3>
-
 </div>
-
-
-
-
-
 <div class="container text-center trapezi">
-    <img id="tablePicture" src="images/trapezi.png">
-    <div class="container ">
-      <div class="row cardsPlayedFrame">
-        <%for (var i=0; i< board.length ;i++){%>
-        <div class="col-lg-2 col-md-2 col-sm-2 col-xs-2">
-            <img src="images/<%=board[i]%>.png" class="card-img-top cardPlayedOnBoard">
-        </div>
-        <%}%>
+  <img id="tablePicture" src="images/trapezi.png">
+  <div class="container ">
+    <div class="row cardsPlayedFrame">
+      <%for (var i=0; i< board.length ;i++){%>
+      <div class="col-lg-2 col-md-2 col-sm-2 col-xs-2">
+        <img src="images/<%=board[i]%>.png" class="card-img-top cardPlayedOnBoard">
+      </div>
+      <%}%>
       </div>
     </div>
 </div>
-
-
-
-<div class="container">
-  <div class="playerHand">
-    <div class="row">
-      <%for (var i=0; i< startingHand.length ;i++){%>
-      <div class="col-lg-2 col-md-2 col-sm-2 col-xs-2">
-        <div class="playingCard" cardValue="<%=startingHand[i].value%>" cardSuit="<%=startingHand[i].suit%>">
-          <img src="images/<%=startingHand[i].value%><%=startingHand[i].suit%>.png" class="card-img-top">
-        </div>
+<div class="container text-center">
+  <% if (gameOn) { %>
+      <% if (currentUser.currentTurn) { %>
+      <input id="turnIndicator" type="hidden" name="" value="<%=currentUser.currentTurn%>">
+      <label for="spin" class="loadingLabel">Είναι η σειρά σου να πάιξεις !</label>
+      <%} else {%>
+      <label for="spin" class="loadingLabel">Περίμενε τον αντίπαλο σου να παίξει...</label>
+      <div id="spin" class="spinner-border text-success" role="status">
+        <span class="sr-only ">Waiting other players</span>
       </div>
       <%}%>
+    <%}else{%>
+      <label for="spin" class="loadingLabel">Περίμενε να συνδεθεί δεύτερο άτομο</label>
+      <div id="spin" class="spinner-border text-success" role="status">
+        <span class="sr-only ">Waiting other players</span>
+      </div>
+      <%  } %>
+    </div>
+    <div class="container">
+      <div class="playerHand">
+        <div class="row">
+          <%for (var i=0; i< startingHand.length ;i++){%>
+          <div class="col-lg-2 col-md-2 col-sm-2 col-xs-2">
+            <div class="playingCard" cardValue="<%=startingHand[i].value%>" cardSuit="<%=startingHand[i].suit%>">
+              <img src="images/<%=startingHand[i].value%><%=startingHand[i].suit%>.png" class="card-img-top">
+            </div>
+          </div>
+          <%}%>
     </div>
   </div>
 </div>
 
-
-
 <div class="container text-center">
-  <label for="spin" class="loadingLabel"><%= title %> </label>
-      <div id="spin" class="spinner-border text-success" role="status">
-        <span class="sr-only ">Waiting other players</span>
-      </div>
       <br>
       <form action="/game" method="post">
         <button id="startButton" class="btn btn-success btn-sm" type="submit" name="startButton" disabled>Start Game</button>
@@ -62,4 +66,49 @@
       <input class="cardValue" type="hidden" name="cardValue" value="">
       <input class="cardSuit" type="hidden" name="cardSuit" value="">
     </form>
+
+    <script>
+      //jshint esversion:6
+      let turn = $("#turnIndicator").val();
+      $( document ).ready(function() {
+        // making cards draggable depending on your turn
+          if (turn==="true"){
+            //making cards draggable
+            $(".playingCard").draggable({
+              revert: "invalid"
+            });
+          }else if (turn==="false"){
+            // cards cant been dragged
+            $(".playingCard").draggable("disable");
+        }
+
+        //making the table droppable
+        $("#tablePicture").droppable({
+          accept: ".playingCard",
+          //drop function to get info about what card was dropped and who dropped it
+          drop: function(event, ui) {
+            //disable dragging after card being dropped
+            $(ui.draggable).draggable('disable');
+            //parent card ID
+            var droppedItemValue = ui.draggable.attr("cardValue");
+            var droppedItemSuit = ui.draggable.attr("cardSuit");
+            //automatically center dropped card
+            ui.draggable.position({
+              my: "center",
+              at: "center",
+              of: $(this),
+              using: function(pos) {
+                $(this).animate(pos, "slow", "linear");
+              }
+            });
+            $(".cardValue").val(droppedItemValue);
+            $(".cardSuit").val(droppedItemSuit);
+            $("#update").submit();
+          }
+        });
+      });
+
+    </script>
+
+
     <%- include('partials/footer'); -%>

@@ -15,8 +15,7 @@ function addUser(id,name,room){
   if(usersInThisRoom!==2){
     users.push(user);
   }
-  console.log("this is the users array");
-  console.log(users);
+
 }
 function setRemainingCards(cards){
   remainingCards = cards;

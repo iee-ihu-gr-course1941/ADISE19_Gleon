@@ -1,9 +1,4 @@
 //jshint esversion:6
-
-// TODO list
-// populate starting hands to the server for each player after they are ready to start
-
-
 //imports
 const express = require("express");
 const bodyParser = require("body-parser");
@@ -35,7 +30,6 @@ var app = express();
 const server = http.Server(app);
 io = socket(server);
 
-
 //we use EJS as the express view engine
 app.set('view engine', 'ejs');
 //we use bodyParser to grab HTML content
@@ -45,22 +39,12 @@ app.use(bodyParser.urlencoded({
 //we need to specify the folder that will use our application's resources
 app.use(express.static("public"));
 
-//a counter to see how many users are currently on our app
-var users = 0;
-//a boolean to check if the game is full or not
-var gameFull = false;
-//an array for players
-var players = [];
-//an array that indicates the current gameBoard
-var board = [];
 //a counter to check the players logged playing (2 max)
 var usersInGame = 0;
 //a boolean to check if game is on
 var gameOn = false;
-//temp socket id
-var tempSocket;
 //an array that represents the current gameBoard
-var board=[];
+var board = [];
 
 
 //////////////////////////////////SESSION SETTINGS/////////////////////////////
@@ -129,39 +113,16 @@ const Deck = mongoose.model("deck", deckSchema);
 //////////////////////////////SOCKETS' MANAGEMENT//////////////////////////////
 
 io.on('connection', function(socket) {
-
   //we check if the the room is full with callback to client with the number of players
   socket.on('checkRoom', function(room) {
     // let users = getUsersInRoom(roomName);
     var tempUsers = getAllUsers();
     room(tempUsers);
   });
-  socket.on("joinRoom", function(room) {
-    socket.join(`${room}`, function() {
-      //gives back the connected sockets to the specific room
-      clients = io.sockets.adapter.rooms[`${room}`].sockets;
 
-      console.log("Checking clients in this room");
-      console.log(clients);
-      // let rooms = Object.keys(socket.rooms);
-      // console.log(rooms); // [ <socket.id>, 'room 237' ]
-      io.to(`${room}`).emit('a new user has joined the room'); // broadcast to everyone in the room
-    });
-  });
-
-  // io.in('game').emit('big-announcement', 'the game will start soon');
-
-  tempSocket = socket.id;
-
-  //when a user disconnets
-  socket.on('disconnect', function() {
-    removeUser(socket.id);
-    console.log('A user disconnected');
-  });
-
-  //on startGame handler which is sent from client when game is ready to start
   socket.on("startGame", function() {
-    console.log("game has started");
+    swapTurn();
+    socket.broadcast.emit("refresh");
   });
 });
 
@@ -262,47 +223,106 @@ function dealCards() {
 }
 
 //function to remove a card from the hand when it's played
-function removeCardFromDeck(value,suit) {
+function removeCardFromDeck(value, suit) {
   //we remove the card played from the array
   User.updateOne({}, {
     "$pull": {
       startingHand: {
         value: value,
-        suit:suit
+        suit: suit
       }
     }
   }, {
     safe: true,
     multi: true
   }, function(err, card) {
-    if (err){
+    if (err) {
       console.log(err);
-    }else {
-      console.log(card +" was removed from your hand !");
+    } else {
+      console.log(card + " was removed from your hand !");
     }
   });
 
-  let cardPlayed = value+suit;
+  let cardPlayed = value + suit;
   board.push(cardPlayed);
 }
 
-//function to check if it's user's turn
-function checkTurn(username){
-  User.find({username:username},function(err,user){
-    if (err){
+//function to swap turns
+function swapTurn() {
+  User.find(function(err, foundUsers) {
+    if (err) {
       console.log(err);
-    }else {
-      return user.currentTurn;
+    } else {
+      console.log(foundUsers);
+      //they are equal only when the game begins when they are both FALSE
+      if (foundUsers[0].currentTurn === foundUsers[1].currentTurn) {
+        User.updateOne({
+          username: foundUsers[0].username
+        }, {
+          currentTurn: true
+        }, function(err, user) {
+          if (err) {
+            console.log(err);
+          } else {
+            console.log("Turns updated");
+          }
+        });
+      } else if (foundUsers[0].currentTurn) {
+        User.updateOne({
+          username: foundUsers[0].username
+        }, {
+          currentTurn: false
+        }, function(err, user) {
+          if (err) {
+            console.log(err);
+          } else {
+            console.log("Turns updated");
+          }
+        });
+        User.updateOne({
+          username: foundUsers[1].username
+        }, {
+          currentTurn: true
+        }, function(err, user) {
+          if (err) {
+            console.log(err);
+          } else {
+            console.log("Turns updated");
+          }
+        });
+      } else if (!foundUsers[0].currentTurn) {
+        User.updateOne({
+          username: foundUsers[0].username
+        }, {
+          currentTurn: true
+        }, function(err, user) {
+          if (err) {
+            console.log(err);
+          } else {
+            console.log("Turns updated");
+          }
+        });
+        User.updateOne({
+          username: foundUsers[1].username
+        }, {
+          currentTurn: false
+        }, function(err, user) {
+          if (err) {
+            console.log(err);
+          } else {
+            console.log("Turns updated");
+          }
+        });
+      }
     }
   });
 }
-
 
 // HOME "/" HTTP requests
 app.route("/")
   //GET to our home route
   .get(function(req, res) {
-    initialCardDeal();
+
 
     // io.to(`${tempSocket}`).emit("test");
     //find how many players are registered
@@ -347,23 +367,14 @@ app.route("/")
           //if not redirect to home
           return res.redirect('/');
         } else {
-          //if there is room add the user in the room
+          //if there is space in room add the user in the room
           addUser(req.user._id, req.user.username, room);
-
-
-          //send to the current socket
-          // io.to(`${tempSocket}`).emit("authenticatedJoin", {
-          //   username,
-          //   room
-          // });
-          //increment users
-          // usersInGame++;
 
           //render our main game page since everything went ok
           return res.render("game", {
-            title: "Παρακαλώ περιμένετε τον 2ο παίκτη",
+            gameOn: gameOn,
             startingHand: [],
-            board:[],
+            board: [],
             currentUser: req.user
             //callback to inform first player if room has filled
           }, function(err, info) {
@@ -371,9 +382,9 @@ app.route("/")
               console.log(err);
             } else {
               res.render("game", {
-                title: "Παρακαλώ περιμένετε τον 2ο παίκτη",
+                gameOn: gameOn,
                 startingHand: [],
-                board:[],
+                board: [],
                 currentUser: req.user
               });
               var tempUsers = getAllUsers();
@@ -385,15 +396,15 @@ app.route("/")
     })(req, res);
   });
 
-
-
 //when a move is made
 app.post("/update", function(req, res) {
   console.log("This is the card VALUE");
   console.log(req.body.cardValue);
   console.log("This is the card SUIT");
   console.log(req.body.cardSuit);
-  removeCardFromDeck(req.body.cardValue,req.body.cardSuit);
+  removeCardFromDeck(req.body.cardValue, req.body.cardSuit);
+  swapTurn();
+  io.emit("update");
   res.redirect("/game");
 });
 
@@ -402,8 +413,8 @@ app.get("/game", function(req, res) {
   if (req.isAuthenticated()) {
     //req.user now represents our Authenticated user
     res.render("game", {
-      title: "",
-      board:board,
+      gameOn: gameOn,
+      board: board,
       startingHand: req.user.startingHand,
       currentUser: req.user
     });
@@ -414,10 +425,12 @@ app.get("/game", function(req, res) {
 //when the game is ready to start we post /game
 app.post("/game", function(req, res) {
   if (req.isAuthenticated()) {
+    gameOn = true;
+    initialCardDeal();
     //req.user now represents our Authenticated user
     res.render("game", {
-      title: "",
-      board:board,
+      gameOn: gameOn,
+      board: board,
       startingHand: req.user.startingHand,
       currentUser: req.user
     });
@@ -439,13 +452,6 @@ app.get("/register", function(req, res) {
 });
 //our POST from register form
 app.post("/register", function(req, res) {
-  //find how many players are registered
-  // User.countDocuments(function(err, count) {
-  //   console.log('there are %d users', count);
-  //   usersInGame = count;
-  // });
-  //the .register is a method from passportLocalMongoose
-  //which adds a new user to our DB
   User.register({
     username: req.body.username,
     currentTurn: false
@@ -454,7 +460,6 @@ app.post("/register", function(req, res) {
       console.log(err);
       res.redirect("/register");
     } else {
-      players.push(user);
       //we authenticate the user and render the game page
       passport.authenticate("local")(req, res, function() {
         return res.redirect("/");
@@ -474,7 +479,6 @@ app.get("/cards", function(req, res) {
     console.log(remainingCards);
   });
 });
-
 
 //server start to port 3000
 server.listen(port, function(err) {
