@@ -73,6 +73,7 @@ const userSchema = mongoose.Schema({
   username: String,
   password: String,
   startingHand: [],
+  cardsTaken: [],
   currentTurn: {
     required: true,
     type: Boolean
@@ -321,6 +322,29 @@ function turn() {
   });
 }
 
+//function to check if the card played is the same as the last played
+//basicly our main logic
+function checkBoard(user,value,suit,board){
+  //we want to check if the last played card value, is equal to the last card's value on board
+  if (board[board.length]===value){
+    //then if this is true we want to push the board to our players cards taken in our db.
+    User.updateOne({username:user}, {
+      "$push": {
+        cardsTaken: board
+      }
+    }, {
+      //options to determine that this is a safe action
+      safe: true,
+      multi: true
+    }, function(err, user) {
+      if (err) {
+        console.log(err);
+      } else {
+        console.log(user + " board has been added to your collection !");
+      }
+    });
+  }
+}
 
 
 // HOME "/" HTTP requests
@@ -381,6 +405,7 @@ app.post("/update", function(req, res) {
   console.log("This is the card SUIT");
   console.log(req.body.cardSuit);
   removeCardFromDeck(req.user.username,req.body.cardValue, req.body.cardSuit);
+  checkBoard(req.body.username,req.body.cardValue,req.body.cardSuit,board);
   turn();
   io.emit("update");
   res.redirect("/game");

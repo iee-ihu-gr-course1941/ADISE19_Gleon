@@ -10,7 +10,7 @@ font-family: 'Open Sans Condensed', sans-serif; */
   width: max-content;
   height: max-content;
   padding: 4vmin;
-  background-color: #db3056;
+  background-color: #7fcd91;
   position: relative;
   top: 10px;
 }
@@ -31,7 +31,7 @@ font-family: 'Open Sans Condensed', sans-serif; */
   color:#9d2503;
 }
 label,a,h2,.card-text{
-  color:#f6f4e6;
+  color:#2c7873;
   font-weight: bold;
 
 }
@@ -176,4 +176,7 @@ h1 {
 }
 .badge{
 margin-left: 150px;
+}
+.loadingLabel{
+  color: #f6f4e6;
 }

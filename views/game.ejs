@@ -26,14 +26,14 @@
       <label for="spin" class="loadingLabel">Είναι η σειρά σου να πάιξεις !</label>
       <%} else {%>
       <label for="spin" class="loadingLabel">Περίμενε τον αντίπαλο σου να παίξει...</label>
-      <div id="spin" class="spinner-border text-success" role="status">
-        <span class="sr-only ">Waiting other players</span>
+      <div class="spinner-grow text-danger loadingLabel" role="status">
+        <span class="sr-only">Loading...</span>
       </div>
       <%}%>
     <%}else{%>
-      <label for="spin" class="loadingLabel">Περίμενε να συνδεθεί δεύτερο άτομο</label>
-      <div id="spin" class="spinner-border text-success" role="status">
-        <span class="sr-only ">Waiting other players</span>
+      <p class="loadingLabel">Περίμενε να συνδεθεί δεύτερο άτομο</p>
+      <div id="loadingLabel" class="spinner-grow text-danger" role="status">
+        <span class="sr-only">Loading...</span>
       </div>
       <%  } %>
     </div>
