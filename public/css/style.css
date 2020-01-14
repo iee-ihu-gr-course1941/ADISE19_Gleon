@@ -10,7 +10,7 @@ font-family: 'Open Sans Condensed', sans-serif; */
   width: max-content;
   height: max-content;
   padding: 4vmin;
-  background-color: #2c7873;
+  background-color: #db3056;
   position: relative;
   top: 10px;
 }
@@ -27,17 +27,17 @@ font-family: 'Open Sans Condensed', sans-serif; */
   color: #B0D9C1;
 }
 /* COLOR ASINGMENT */
-.creatorName,.headerTitle,h4,h3,h2,a,.bottomCreator{
-  color:#ffdc34;
+.creatorName,.headerTitle,h4,h3{
+  color:#9d2503;
 }
-label{
-  color:#effffb;
+label,a,h2,.card-text{
+  color:#f6f4e6;
   font-weight: bold;
 
 }
 
 /* FONT ASSIGN Jura */
-.form-group,#welcomeMsg,h4,.loadingLabel,.form-control{
+.form-group,#welcomeMsg,h4,.loadingLabel,.form-control,.creatorName{
   font-family: 'Jura', sans-serif;
 }
 /* FONT ASSIGN Jura Open Sans Condensed*/
@@ -54,13 +54,13 @@ hr{
   border-radius: 0;
   border-width: 5px;
   border-top:0;
-  border-color:#4dd599;
+  border-color:#fbe3b9;
 }
 
 body {
   margin: 0;
   padding: 0;
-  background-color: #110133;
+  background-color: #0c9463;
   height: 600px;
 }
 
@@ -146,4 +146,34 @@ h1 {
 }
 .results{
   padding: 0 200px;
+  width: max-content;
+}
+.status{
+  padding: 0 200px;
+  width: max-content;
+}
+.logo{
+  width: 200px;
+}
+.logoInGame{
+  width: 100px;
+}
+.creatorName{
+  padding: 0;
+  margin: 0;
+  color: black;
+  font-size: 5vmin;
+}
+.bottomCreator{
+  color: #f6f4e6;
+  font-family: 'Open Sans Condensed';
+}
+.list-group-item{
+  padding:5px 10px;
+  font-family: 'Jura', sans-serif;
+  font-size: 3vmin;
+  font-weight: bold;
+}
+.badge{
+margin-left: 150px;
 }

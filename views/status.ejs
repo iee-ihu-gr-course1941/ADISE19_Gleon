@@ -1,0 +1,52 @@
+<%- include('partials/header'); -%>
+
+<div class="alert alert-primary alerts" role="alert">
+</div>
+<div class="alert alert-warning alerts" role="alert">
+</div>
+<div class="alert alert-danger alerts" role="alert">
+</div>
+<container name="login">
+  <div id="welcomeMsg">
+    <a href="/"><img class="logo" src="/images/kseriLogo.png" alt=""></a>
+    <div class="container mainPageCredentials">
+      <p class="creatorName">Λεωνίδης Γιώργος</p>
+      <h6>Ανάπτυξη Διαδικτυακών Συστημάτων & Εφαρμογών</h6>
+    </div>
+  </div>
+  <br>
+  <div class="container text-center status">
+    <%if (!gameOn){%>
+      <div class="card bg-danger">
+      <div class="card-body text-center">
+        <p class="card-text">Το παιχνίδι ακόμα δεν έχει ξεκινήσει</p>
+      </div>
+    </div>
+
+    <%}else {%>
+    <ul class="list-group">
+      <li class="list-group-item d-flex justify-content-between align-items-center">
+        Player's turn
+        <span class="badge badge-primary badge-pill"><%=currentTurnUser%></span>
+      </li>
+      <li class="list-group-item d-flex justify-content-between align-items-center">
+        Cards on board
+        <span class="badge badge-primary badge-pill"><%=board.length%> cards on board</span>
+      </li>
+      <li class="list-group-item d-flex justify-content-between align-items-center">
+        Player 1 Card Count
+        <span class="badge badge-primary badge-pill"><%=player1Cards%> cards in hand</span>
+      </li>
+      <li class="list-group-item d-flex justify-content-between align-items-center">
+        Player 2 Card Count
+        <span class="badge badge-primary badge-pill"><%=player2Cards%> cards in hand</span>
+      </li>
+    </ul>
+    <%}%>
+  </div>
+  <br>
+
+
+</container>
+
+<%- include('partials/footer'); -%>

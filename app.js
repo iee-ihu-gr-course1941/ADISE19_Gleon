@@ -360,8 +360,8 @@ app.route("/")
           return res.render("game",
            {
             gameOn: gameOn,
-            startingHand: [],
-            board: [],
+            startingHand: req.user.startingHand,
+            board: board,
             currentUser: req.user
           });
         });
@@ -414,6 +414,30 @@ app.post("/game", function(req, res) {
   }
 });
 
+app.get("/status",function(req,res){
+  let currentTurnUser;
+  let player1Cards;
+  let player2Cards;
+  User.find(function(err,foundUsers){
+    //since we know only the first two indexes are the players
+    //otherwise we had to use a for loop "for (var i=0;i<foundUsers.length;i++)"
+    if (foundUsers[0].currentTurn===true){
+      currentTurnUser=foundUsers[0].username;
+    }
+    if (foundUsers[1].currentTurn===true){
+      currentTurnUser=foundUsers[1].username;
+    }
+    player1Cards=foundUsers[0].startingHand.length;
+    player2Cards=foundUsers[1].startingHand.length;
+    res.render("status",{
+      gameOn:gameOn,
+      currentTurnUser:currentTurnUser,
+      board:board,
+      player1Cards:player1Cards,
+      player2Cards:player2Cards
+    });
+  });
+});
 app.get("/users",function(req,res){
   User.find(function(err,users){
     console.log(users);
