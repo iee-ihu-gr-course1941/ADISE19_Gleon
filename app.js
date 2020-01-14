@@ -13,11 +13,7 @@ const uid = require('uid-safe');
 const passportLocalMongoose = require("passport-local-mongoose");
 const {
   addUser,
-  removeUser,
-  getUser,
-  getUsers,
   getAllUsers,
-  getRoom,
   resetGame,
   setRemainingCards,
   getRemainingCards
@@ -37,10 +33,8 @@ app.use(bodyParser.urlencoded({
   extended: true
 }));
 //we need to specify the folder that will use our application's resources
-app.use(express.static(__dirname +"/public"));
+app.use(express.static(__dirname + "/public"));
 
-//a counter to check the players logged playing (2 max)
-var usersInGame = 0;
 //a boolean to check if game is on
 var gameOn;
 //an array that represents the current gameBoard
@@ -93,8 +87,7 @@ passport.deserializeUser(User.deserializeUser());
 const Card = mongoose.model("card", cardSchema);
 //we create the collection (TABLE) where it will hold our remainingCards
 const RemainingCards = mongoose.model("remaining card", cardSchema);
-//we create a temp table in our db with the current active players
-const UsersInGame = mongoose.model("user in game", userSchema);
+
 
 //we create our SCHEMA for the deck that will contain cards that use cardSchema
 const deckSchema = mongoose.Schema({
@@ -120,9 +113,10 @@ io.on('connection', function(socket) {
     initialCardDeal();
     turn();
     socket.broadcast.emit("refresh");
+
   });
   //if game has not started we always check if the room has filled
-  if (!gameOn){
+  if (!gameOn) {
     let tempUsers = getAllUsers();
     io.sockets.emit('checkRoom', tempUsers);
   }
@@ -226,9 +220,11 @@ function dealCards() {
 }
 
 //function to remove a card from the hand when it's played
-function removeCardFromDeck(user,value, suit) {
+function removeCardFromDeck(user, value, suit) {
   //we remove the card played from the array
-  User.updateOne({username:user}, {
+  User.updateOne({
+    username: user
+  }, {
     "$pull": {
       startingHand: {
         value: value,
@@ -324,18 +320,21 @@ function turn() {
 
 //function to check if the card played is the same as the last played
 //basicly our main logic
-function checkBoard(user,value,suit,board){
+function checkBoard(user, value, suit, board) {
+  let card = value + suit;
   //we want to check if the last played card value, is equal to the last card's value on board
-  if (board[board.length]===value){
+  if (board[board.length - 1] === card) {
+    console.log("THE VALUES OF THE CARDS ARE THE SAME");
+    console.log("THE USERNAME IS " + user);
+    board = [];
+    io.emit("clearBoard");
     //then if this is true we want to push the board to our players cards taken in our db.
-    User.updateOne({username:user}, {
+    User.updateOne({
+      username: user
+    }, {
       "$push": {
         cardsTaken: board
       }
-    }, {
-      //options to determine that this is a safe action
-      safe: true,
-      multi: true
     }, function(err, user) {
       if (err) {
         console.log(err);
@@ -343,6 +342,7 @@ function checkBoard(user,value,suit,board){
         console.log(user + " board has been added to your collection !");
       }
     });
+
   }
 }
 
@@ -351,6 +351,11 @@ function checkBoard(user,value,suit,board){
 app.route("/")
   //GET to our home route
   .get(function(req, res) {
+    let tempUsers = getAllUsers();
+    //we let the client now the game is now full
+    if (tempUsers >= 2) {
+      io.emit("full");
+    }
     res.render("index");
   })
   //POST from our home route (login)
@@ -364,9 +369,9 @@ app.route("/")
       password: password,
       room: room,
     });
-    var tempUsers = getAllUsers();
+    let tempUsers = getAllUsers();
 
-    if (tempUsers<2){
+    if (tempUsers < 2) {
       passport.authenticate('local', function(err, user, info) {
         //passport searches our DB if there is user with that username
         if (!user) {
@@ -381,8 +386,7 @@ app.route("/")
           //if there is space in room add the user in the room
           addUser(req.user);
           //render our main game page since everything went ok
-          return res.render("game",
-           {
+          return res.render("game", {
             gameOn: gameOn,
             startingHand: req.user.startingHand,
             board: board,
@@ -390,7 +394,7 @@ app.route("/")
           });
         });
       })(req, res);
-    }else {
+    } else {
       console.log("Game room is full");
       res.redirect("/");
     }
@@ -398,19 +402,18 @@ app.route("/")
 
 //when a move is made
 app.post("/update", function(req, res) {
-  console.log("THIS IS THE PLAYER THAT DID THE MOVE ");
-  console.log(req.user);
-  console.log("This is the card VALUE");
-  console.log(req.body.cardValue);
-  console.log("This is the card SUIT");
-  console.log(req.body.cardSuit);
-  removeCardFromDeck(req.user.username,req.body.cardValue, req.body.cardSuit);
-  checkBoard(req.body.username,req.body.cardValue,req.body.cardSuit,board);
+  //we remove the card that the player played from his hand
+  removeCardFromDeck(req.user.username, req.body.cardValue, req.body.cardSuit);
+  //we check if the card played is the same as the last one played
+  checkBoard(req.user.username, req.body.cardValue, req.body.cardSuit, board);
+  //we switch turns
   turn();
-  io.emit("update");
+  //emit to clients to update screen
+  io.emit("refresh");
+  console.log("The board now has this many cards " + board.length);
+  //redirect
   res.redirect("/game");
 });
-
 //when the game is ready to start we post /game
 app.get("/game", function(req, res) {
   if (req.isAuthenticated()) {
@@ -438,52 +441,107 @@ app.post("/game", function(req, res) {
     });
   }
 });
-
-app.get("/status",function(req,res){
+//a GET route for the current game status
+app.get("/status", function(req, res) {
   let currentTurnUser;
   let player1Cards;
   let player2Cards;
-  User.find(function(err,foundUsers){
+  User.find(function(err, foundUsers) {
     //since we know only the first two indexes are the players
     //otherwise we had to use a for loop "for (var i=0;i<foundUsers.length;i++)"
-    if (foundUsers[0].currentTurn===true){
-      currentTurnUser=foundUsers[0].username;
+    if (foundUsers[0].currentTurn === true) {
+      currentTurnUser = foundUsers[0].username;
     }
-    if (foundUsers[1].currentTurn===true){
-      currentTurnUser=foundUsers[1].username;
+    if (foundUsers[1].currentTurn === true) {
+      currentTurnUser = foundUsers[1].username;
     }
-    player1Cards=foundUsers[0].startingHand.length;
-    player2Cards=foundUsers[1].startingHand.length;
-    res.render("status",{
-      gameOn:gameOn,
-      currentTurnUser:currentTurnUser,
-      board:board,
-      player1Cards:player1Cards,
-      player2Cards:player2Cards
+    player1Cards = foundUsers[0].startingHand.length;
+    player2Cards = foundUsers[1].startingHand.length;
+    res.render("status", {
+      gameOn: gameOn,
+      currentTurnUser: currentTurnUser,
+      board: board,
+      player1Cards: player1Cards,
+      player2Cards: player2Cards
     });
   });
 });
-app.get("/users",function(req,res){
-  User.find(function(err,users){
-    console.log(users);
-    res.render("results",{
-      results:users
-    });
-  });
-});
-app.get("/users/:u",function(req,res){
-  console.log(req.params);
-  User.find({username:req.params.u},function(err,user){
-    if (err){
+//a GET to wipe the current game fresh
+app.get("/reset", function(req, res) {
+  //game now is off
+  gameIsOn = false;
+  //reseting the users in the variable
+  resetGame();
+  //wiping the board
+  board = [];
+
+  //we wipe all the cards from players' hands
+  User.updateMany({}, {
+    "$set": {
+      cardsTaken: []
+    }
+  }, function(err, user) {
+    if (err) {
       console.log(err);
-    }else {
-      if (user.length===0){
-        res.render("results",{
-          results:user
+    } else {
+      console.log(user + " boards have been wiped !");
+    }
+  });
+  //we delete our starting hand
+  User.updateMany({}, {
+    "$set": {
+      startingHand: []
+    }
+  }, function(err, user) {
+    if (err) {
+      console.log(err);
+    } else {
+      console.log(user + " boards have been wiped !");
+    }
+  });
+  //all turns are now false
+  User.updateMany({}, {
+    "$set": {
+      currentTurn: false
+    }
+  }, function(err, user) {
+    if (err) {
+      console.log(err);
+    } else {
+      console.log(user + " boards have been wiped !");
+    }
+  });
+  req.logout();
+  io.emit("empty");
+  res.redirect("/");
+
+
+});
+//a GET request to get all users or a specific user
+app.get("/users", function(req, res) {
+  User.find(function(err, users) {
+    console.log(users);
+    res.render("results", {
+      results: users
+    });
+  });
+});
+//a GET request to get a specific user
+app.get("/users/:u", function(req, res) {
+  console.log(req.params);
+  User.find({
+    username: req.params.u
+  }, function(err, user) {
+    if (err) {
+      console.log(err);
+    } else {
+      if (user.length === 0) {
+        res.render("results", {
+          results: user
         });
-      }else {
-        res.render("results",{
-          results:user
+      } else {
+        res.render("results", {
+          results: user
         });
       }
     }
@@ -496,7 +554,7 @@ app.post("/logout", function(req, res) {
 });
 //our register route
 app.get("/register", function(req, res) {
-    res.render("register");
+  res.render("register");
 });
 //our POST from register form
 app.post("/register", function(req, res) {

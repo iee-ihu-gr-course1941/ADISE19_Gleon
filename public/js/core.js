@@ -29,12 +29,15 @@ socket.on("checkRoom",function(users){
   if (users === 2) {
     $(".loadingLabel").text("Το παιχνίδι μπορεί να ξεκινήσει !");
     $("#startButton").removeAttr("disabled").removeClass("btn-sm").addClass("btn-lg");
-    $("#spin").hide();
+    $("#loadingLabel").hide();
   }
 });
 
-socket.on("update",function(){
-  location.replace("/game");
+socket.on("full",function(){
+  full=true;
+});
+socket.on("empty",function(){
+  full=false;
 });
 
 // when new game starts we hide the start button and spinner
@@ -54,6 +57,11 @@ $("#startButton").on("click",function(e){
   socket.emit("startGame");
 });
 
+socket.on("clearBoard",function(){
+  $(".cardPlayedOnBoard").remove();
+});
+
+
 // submit button on click event
 $("#submitBtn").on("click", function(e) {
   window.scrollTo(0, 0);
@@ -63,7 +71,7 @@ $("#submitBtn").on("click", function(e) {
   var room = $("#room").val();
   //the username must not be empty
   if (username == "" || password == "" || room == "") {
-    $(".alert-warning").text("Το όνομα χρήστη/κωδικός/δωμάτιο δεν μπορούν να είναι κενά !");
+    $(".alert-warning").text("Το όνομα χρήστη/κωδικός δεν μπορούν να είναι κενά !");
     $(".alert-warning").slideToggle(500);
     setTimeout(hideWarningAlert, 2500);
     //we prevent the form from submiting

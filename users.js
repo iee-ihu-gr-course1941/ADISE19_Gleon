@@ -5,10 +5,14 @@ var users = [];
 var cards = [];
 var remainingCards = [];
 
+//function to wipe the game
 function resetGame(){
   users = [];
+  cards = [];
+  remainingCards = [];
 }
 
+//we create dummy users to check the count
 function addUser(user){
   activeUsers=getAllUsers ();
   let newUser = user;
@@ -19,47 +23,30 @@ function addUser(user){
   console.log(newUser);
 }
 
+//function to get how many users are in the game
 function getAllUsers (){
   return users.length;
 }
 
+//remaining cards left to deal for the current game session
 function setRemainingCards(cards){
   remainingCards = cards;
 }
+//getting the remaining cards left to deal for the current game session
 function getRemainingCards(){
   return remainingCards;
 }
 
+//we get the initial card copy of our db
 function setCards(cardsDB){
   cards=cardsDB;
 }
 
-function removeUser(id) {
-  const index = users.findIndex((user) => user.id === id);
-  if (index !== -1) return users.splice(index, 1)[0];
-}
 
-function getUser(id) {
-  const user = users.find((user) => user.id === id);
-}
 
-function getRoom(id){
-  tempUser = _.find(users,{id:id});
-  return tempUser;
-
-}
-
-function getUsers(room) {
-  //using lodash to find an array of users that are in room
-  return _.filter(users,{room:room});
-}
 module.exports = {
   addUser,
-  removeUser,
-  getUser,
-  getUsers,
   getAllUsers,
-  getRoom,
   resetGame,
   setRemainingCards,
   getRemainingCards
