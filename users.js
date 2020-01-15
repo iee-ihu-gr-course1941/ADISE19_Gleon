@@ -19,8 +19,6 @@ function addUser(user){
   if(activeUsers!==2){
     users.push(newUser);
   }
-  console.log("A player is now in the game :");
-  console.log(newUser);
 }
 
 //function to get how many users are in the game

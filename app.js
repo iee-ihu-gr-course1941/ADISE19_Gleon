@@ -1,5 +1,6 @@
 //jshint esversion:6
 //imports
+require('dotenv').config();
 const express = require("express");
 const bodyParser = require("body-parser");
 const ejs = require("ejs");
@@ -39,7 +40,10 @@ app.use(express.static(__dirname + "/public"));
 let gameOn;
 //an array that represents the current gameBoard
 let board = [];
-
+//an array containing only the values of the cards played on board
+let boardValues=[];
+//a counter to check how many players are out of cards
+let outOfCards=0;
 
 //////////////////////////////////SESSION SETTINGS/////////////////////////////
 
@@ -58,6 +62,21 @@ app.use(passport.session());
 
 /////////////////////////////database COLLECTION AND SCHEMA creation ////////////
 //we create the SCHEMA of a card
+//our connection to mongoDB on our kseriDB, if there is no DB with the current
+//name it will be automatically created.
+
+mongoose.connect("mongodb+srv://"+process.env.DB_USER+":"+process.env.DB_PASS+"@cluster0-rsv4x.mongodb.net/test?retryWrites=true&w=majority/kseriDB", {
+  useNewUrlParser: true,
+  useUnifiedTopology: true
+}, function(err) {
+  console.log(err);
+  console.log("Database connected");
+});
+//needed from Passport
+mongoose.set("useCreateIndex", true);
+
+
+
 const cardSchema = mongoose.Schema({
   suit: String, //(S)PADES , (H)EARTS , (D)IAMONDS , (C)LUBS
   value: String, //2 3 4 5 6 7 8 9 10 J Q K A
@@ -140,8 +159,6 @@ function initialCardDeal() {
       // PLAYER 1 UPDATE
       firstPlayerRandomCards = _.sampleSize(foundItems, 6);
       remainingCards = _.difference(foundItems, firstPlayerRandomCards);
-      console.log("THIS IS PLAYER 1 HAND ");
-      console.log(firstPlayerRandomCards);
       User.updateOne({
         username: foundUsers[0].username
       }, {
@@ -157,8 +174,6 @@ function initialCardDeal() {
       secondPlayerRandomCards = _.sampleSize(remainingCards, 6);
       remainingCards = _.difference(remainingCards, secondPlayerRandomCards);
       setRemainingCards(remainingCards);
-      console.log("THIS IS PLAYER 2 HAND ");
-      console.log(secondPlayerRandomCards);
       User.updateOne({
         username: foundUsers[1].username
       }, {
@@ -183,8 +198,6 @@ function dealCards() {
   //eventually our starting hand.
   //We initialise the first player's hand
   //update the hand of the users
-  console.log("Those are all the remaining cards");
-  console.log(remainingCards);
 
   User.find(function(err, foundUsers) {
 
@@ -237,14 +250,10 @@ function removeCardFromDeck(user, value, suit) {
   }, function(err, card) {
     if (err) {
       console.log(err);
-    } else {
-      console.log(card + " was removed from your hand !");
     }
   });
 
-  let cardPlayed = value + suit;
-  //we add the card player in our board to populate
-  board.push(cardPlayed);
+
 }
 
 //function to swap turns
@@ -253,7 +262,6 @@ function turn() {
     if (err) {
       console.log(err);
     } else {
-      console.log(foundUsers);
       //they are equal only when the game begins when they are both FALSE
       if (foundUsers[0].currentTurn === foundUsers[1].currentTurn) {
         User.updateOne({
@@ -330,12 +338,9 @@ function turn() {
 
 //function to check if the card played is the same as the last played
 //basicly our main logic
-function checkBoard(user, value, suit, board) {
-  let card = value + suit;
+function checkBoard(user, value, suit) {
   //we want to check if the last played card value, is equal to the last card's value on board
-  if (board[board.length - 1] === card) {
-    console.log("THE VALUES OF THE CARDS ARE THE SAME");
-    console.log("THE USERNAME IS " + user);
+  if (boardValues[boardValues.length - 1] === value || value === "J" ) {
     //then if this is true we want to push the board to our players cards taken in our db.
     User.updateOne({
       username: user
@@ -346,16 +351,26 @@ function checkBoard(user, value, suit, board) {
     }, function(err, user) {
       if (err) {
         console.log(err);
-      } else {
-        console.log(user + " board has been added to your collection !");
       }
     });
+    //we reset our board and we emit to clear the board to all clients
     board = [];
+    boardValues=[];
     io.emit("clearBoard");
-
+  }else {
+    //if the card is not the same as the last one, we add the card on the board
+    let cardPlayed = value + suit;
+    //we add the card player in our board to populate
+    board.push(cardPlayed);
+    boardValues.push(value);
   }
 }
 
+function checkCardsInHand(user){
+  if (outOfCards>=2){
+    dealCards();
+  }
+}
 
 // HOME "/" HTTP requests
 app.route("/")
@@ -415,12 +430,19 @@ app.post("/update", function(req, res) {
   //we remove the card that the player played from his hand
   removeCardFromDeck(req.user.username, req.body.cardValue, req.body.cardSuit);
   //we check if the card played is the same as the last one played
-  checkBoard(req.user.username, req.body.cardValue, req.body.cardSuit, board);
+  checkBoard(req.user.username, req.body.cardValue, req.body.cardSuit);
   //we switch turns
   turn();
+  //check if players have still cards in hands
+  if (req.user.startingHand.length==0){
+    outOfCards++;
+  }
+  //if both players are out of cards
+  if (outOfCards==2){
+    dealCards();
+  }
   //emit to clients to update screen
   io.emit("refresh2");
-  console.log("The board now has this many cards " + board.length);
   //redirect
   res.redirect("/game");
 });
@@ -530,7 +552,6 @@ app.get("/reset", function(req, res) {
 //a GET request to get all users or a specific user
 app.get("/users", function(req, res) {
   User.find(function(err, users) {
-    console.log(users);
     res.render("results", {
       results: users
     });
@@ -538,7 +559,6 @@ app.get("/users", function(req, res) {
 });
 //a GET request to get a specific user
 app.get("/users/:u", function(req, res) {
-  console.log(req.params);
   User.find({
     username: req.params.u
   }, function(err, user) {
@@ -591,8 +611,6 @@ app.get("/cards", function(req, res) {
     startingHand = _.sampleSize(foundItems, 6);
     //we create a new deck which has all the elements besides the starting hand
     remainingCards = _.difference(foundItems, startingHand);
-    console.log(startingHand);
-    console.log(remainingCards);
   });
 });
 
@@ -600,14 +618,3 @@ app.get("/cards", function(req, res) {
 server.listen(port, function(err) {
   console.log("Server started on port 3000");
 });
-
-//our connection to mongoDB on our kseriDB, if there is no DB with the current
-//name it will be automatically created.
-mongoose.connect("mongodb://localhost:27017/kseriDB", {
-  useNewUrlParser: true,
-  useUnifiedTopology: true
-}, function() {
-  console.log("Database connected on port 27017");
-});
-//needed from Passport
-mongoose.set("useCreateIndex", true);

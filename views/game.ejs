@@ -3,22 +3,28 @@
 <script src="jquery-ui-1.12.1/jquery-ui.min.js"></script>
 <div class="container text-center">
 
-
+  <!-- HERE IS OUR LOGO -->
   <img class="logoInGame" src="/images/kseriLogo.png">
+  <!-- HERE IS OUR WELCOME MESSAGE -->
   <h3>Καλώς ήρθες <span id="usernameText"><%=currentUser.username%></span></h3>
 </div>
+
+
+<!-- HERE IS OUR TABLE -->
 <div class="container text-center trapezi">
   <img id="tablePicture" src="images/trapezi.png">
-  <div class="container ">
-    <div class="row cardsPlayedFrame">
+
+    <div class="card-group cardsPlayedFrame">
       <%for (let i=0; i< board.length ;i++){%>
-      <div class="col-lg-2 col-md-2 col-sm-2 col-xs-2">
-        <img src="images/<%=board[i]%>.png" class="card-img-top cardPlayedOnBoard">
+      <div class="card">
+        <img class="card-img-top cardPlayedOnBoard" src="images/<%=board[i]%>.png">
       </div>
       <%}%>
-      </div>
-    </div>
 </div>
+</div>
+
+
+<!-- HERE IS OUR MESSAGE TO THE USER SHOWING THE STATUS OF THE GAME -->
 <div class="container text-center">
   <% if (gameOn) { %>
       <% if (currentUser.currentTurn) { %>
@@ -37,34 +43,36 @@
       </div>
       <%  } %>
     </div>
+
+    <!-- HERE IS THE PLAYERS HAND -->
     <div class="container">
-      <div class="playerHand">
-        <div class="row">
-          <%for (let i=0; i< startingHand.length ;i++){%>
-          <div class="col-lg-2 col-md-2 col-sm-2 col-xs-2">
-            <div class="playingCard" cardValue="<%=startingHand[i].value%>" cardSuit="<%=startingHand[i].suit%>">
-              <img src="images/<%=startingHand[i].value%><%=startingHand[i].suit%>.png" class="card-img-top">
-            </div>
-          </div>
-          <%}%>
-    </div>
-  </div>
+      <div class="card-group">
+        <%for (let i=0; i< startingHand.length ;i++){%>
+        <div class="card playingCard" cardValue="<%=startingHand[i].value%>" cardSuit="<%=startingHand[i].suit%>">
+          <img class="card-img-top cardInHand" src="images/<%=startingHand[i].value%><%=startingHand[i].suit%>.png">
+        </div>
+        <%}%>
+</div>
 </div>
 
+<!-- HERE ARE ALL THE BUTTONS -->
 <div class="container text-center">
       <br>
+      <!-- BUTTON THAT STARTS THE GAME WITH A POST -->
       <form action="/game" method="post">
         <button id="startButton" class="btn btn-success btn-sm" type="submit" name="startButton" disabled>Start Game</button>
       </form>
       <br>
+      <!-- BUTTON THAT LOGS OUT THE USER FROM THE SESSION -->
       <form action="/logout" method="post">
         <button class="btn btn-danger exitButton btn-sm" type="submit" name="exitButton">Exit Game</button>
       </form>
-
+<!-- BUTTON FOR DEBUGGING ISSUES -->
         <button id="removeHand" class="btn" type="button" name="removeHand">removeHand</button>
 
     </div>
 
+<!-- HIDDEN INPUTS TO STORE INFO FOR MANIPULATION -->
     <form id="update" action="/update" method="post">
       <input class="cardValue" type="hidden" name="cardValue" value="">
       <input class="cardSuit" type="hidden" name="cardSuit" value="">

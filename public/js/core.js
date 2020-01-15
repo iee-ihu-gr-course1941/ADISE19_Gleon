@@ -70,12 +70,12 @@ $("#startButton").on("click",function(e){
 
 //we remove the board when a player has taken the cards
 socket.on("clearBoard",function(){
-  $(".row.cardsPlayedFrame").remove();
+  $(".cardsPlayedFrame").remove();
   location=location;
 });
 
 $("#removeHand").on("click",function(){
-  $(".row.cardsPlayedFrame").remove();
+  $(".cardsPlayedFrame").remove();
 });
 
 // submit button on click event

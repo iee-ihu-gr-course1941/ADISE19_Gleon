@@ -152,7 +152,7 @@ h1 {
   margin: 0;
 }
 .cardPlayedOnBoard{
-  width: 90px;
+  width: 60px;
   padding: 0;
   margin: 0;
 }
@@ -191,4 +191,12 @@ margin-left: 150px;
 }
 .loadingLabel{
   color: #f6f4e6;
+}
+.card {
+  background-color: transparent;
+  border:0;
+  display: block;
+}
+.cardInHand{
+  width: 25vmin;
 }
