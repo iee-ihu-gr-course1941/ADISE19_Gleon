@@ -26,7 +26,7 @@ Online Card Game - ΞΕΡΗ
 
 # Demo Page
 
-Coming soon...
+https://guarded-oasis-50861.herokuapp.com/
 
 # Εγκατάσταση
 
