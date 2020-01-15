@@ -3,9 +3,9 @@
 //socket initialisation
 const socket = io();
 //a boolean to check the game room
-var full = false;
+let full = false;
 //bool to check if game is on
-var gameIsOn = false;
+let gameIsOn = false;
 
 //method to hide the alerts
 function hideSuccessAlert() {
@@ -38,6 +38,7 @@ socket.on("full",function(){
 });
 socket.on("empty",function(){
   full=false;
+
 });
 
 // when new game starts we hide the start button and spinner
@@ -49,26 +50,41 @@ socket.on("newGame", function() {
 
 //we relocate the second player to the game page
 socket.on("refresh",function(){
+  // alert("REFRESHED");
   location.replace("/game");
+
 });
+
+
+  //we relocate the second player to the game page
+  socket.on("refresh2",function(){
+    // alert("REFRESHED");
+      location=location;
+
+  });
 
 // start game on click event
 $("#startButton").on("click",function(e){
   socket.emit("startGame");
 });
 
+//we remove the board when a player has taken the cards
 socket.on("clearBoard",function(){
-  $(".cardPlayedOnBoard").remove();
+  $(".row.cardsPlayedFrame").remove();
+  location=location;
 });
 
+$("#removeHand").on("click",function(){
+  $(".row.cardsPlayedFrame").remove();
+});
 
 // submit button on click event
 $("#submitBtn").on("click", function(e) {
   window.scrollTo(0, 0);
   //we save the username value
-  var username = $("#username").val();
-  var password = $("#password").val();
-  var room = $("#room").val();
+  let username = $("#username").val();
+  let password = $("#password").val();
+  let room = $("#room").val();
   //the username must not be empty
   if (username == "" || password == "" || room == "") {
     $(".alert-warning").text("Το όνομα χρήστη/κωδικός δεν μπορούν να είναι κενά !");

@@ -21,7 +21,7 @@ const {
 //our port to connect
 const port = process.env.PORT || 3000;
 //we start a new express app
-var app = express();
+let app = express();
 //starting the server
 const server = http.Server(app);
 io = socket(server);
@@ -36,9 +36,9 @@ app.use(bodyParser.urlencoded({
 app.use(express.static(__dirname + "/public"));
 
 //a boolean to check if game is on
-var gameOn;
+let gameOn;
 //an array that represents the current gameBoard
-var board = [];
+let board = [];
 
 
 //////////////////////////////////SESSION SETTINGS/////////////////////////////
@@ -112,8 +112,8 @@ io.on('connection', function(socket) {
     gameOn = true;
     initialCardDeal();
     turn();
-    socket.broadcast.emit("refresh");
-
+    // socket.broadcast.emit("refresh");
+    io.emit("refresh");
   });
   //if game has not started we always check if the room has filled
   if (!gameOn) {
@@ -259,15 +259,18 @@ function turn() {
         User.updateOne({
           username: foundUsers[0].username
         }, {
-          currentTurn: true
+          //the oposite of what the other player is
+          currentTurn: !foundUsers[1].currentTurn
         }, function(err, user) {
           if (err) {
             console.log(err);
           } else {
-            console.log("Turns updated");
+            console.log("TURNS WERE THE SAME, NOW THEY AINT");
           }
         });
+        //IF PLAYER 1  HAS JUST PLAYED SO HIS CURRENT TURN IS TRUE AND WE NEED TO SWITCH IT
       } else if (foundUsers[0].currentTurn) {
+        //we switch it off now and we tell the player his turn now is false.
         User.updateOne({
           username: foundUsers[0].username
         }, {
@@ -276,22 +279,28 @@ function turn() {
           if (err) {
             console.log(err);
           } else {
-            console.log("Turns updated");
+            console.log("PLAYER 1 TURN IS NOW FALSE");
           }
         });
+        //NOW THAT WE HAVE SWITCHED PLAYER1 TURN TO FALSE, WE NEED TO SET TRUE FOR PLAYER2
         User.updateOne({
+          //we search the second player by his username
           username: foundUsers[1].username
         }, {
+          //we set his current turn to true
           currentTurn: true
         }, function(err, user) {
           if (err) {
             console.log(err);
           } else {
-            console.log("Turns updated");
+            console.log("PLAYER 2 TURN IS NOW TRUE");
           }
         });
+        //IF PLAYER 2  HAS JUST PLAYED SO PLAYER1's CURRENT TURN IS FALSE
       } else if (!foundUsers[0].currentTurn) {
+        //we search for the first player
         User.updateOne({
+          //and we set his current turn to false
           username: foundUsers[0].username
         }, {
           currentTurn: true
@@ -299,9 +308,10 @@ function turn() {
           if (err) {
             console.log(err);
           } else {
-            console.log("Turns updated");
+            console.log("PLAYER 1 TURN IS NOW TRUE");
           }
         });
+          //NOW THAT WE HAVE SWITCHED PLAYER1 TURN TO TRUE, WE NEED TO SET FALSE FOR PLAYER2
         User.updateOne({
           username: foundUsers[1].username
         }, {
@@ -310,7 +320,7 @@ function turn() {
           if (err) {
             console.log(err);
           } else {
-            console.log("Turns updated");
+            console.log("PLAYER 2 TURN IS NOW FALSE");
           }
         });
       }
@@ -326,8 +336,6 @@ function checkBoard(user, value, suit, board) {
   if (board[board.length - 1] === card) {
     console.log("THE VALUES OF THE CARDS ARE THE SAME");
     console.log("THE USERNAME IS " + user);
-    board = [];
-    io.emit("clearBoard");
     //then if this is true we want to push the board to our players cards taken in our db.
     User.updateOne({
       username: user
@@ -342,6 +350,8 @@ function checkBoard(user, value, suit, board) {
         console.log(user + " board has been added to your collection !");
       }
     });
+    board = [];
+    io.emit("clearBoard");
 
   }
 }
@@ -360,9 +370,9 @@ app.route("/")
   })
   //POST from our home route (login)
   .post(function(req, res) {
-    var username = req.body.username;
-    var password = req.body.password;
-    var room = req.body.room;
+    let username = req.body.username;
+    let password = req.body.password;
+    let room = req.body.room;
 
     const newUser = new User({
       username: username,
@@ -409,7 +419,7 @@ app.post("/update", function(req, res) {
   //we switch turns
   turn();
   //emit to clients to update screen
-  io.emit("refresh");
+  io.emit("refresh2");
   console.log("The board now has this many cards " + board.length);
   //redirect
   res.redirect("/game");
@@ -448,7 +458,7 @@ app.get("/status", function(req, res) {
   let player2Cards;
   User.find(function(err, foundUsers) {
     //since we know only the first two indexes are the players
-    //otherwise we had to use a for loop "for (var i=0;i<foundUsers.length;i++)"
+    //otherwise we had to use a for loop "for (let i=0;i<foundUsers.length;i++)"
     if (foundUsers[0].currentTurn === true) {
       currentTurnUser = foundUsers[0].username;
     }
@@ -469,8 +479,8 @@ app.get("/status", function(req, res) {
 //a GET to wipe the current game fresh
 app.get("/reset", function(req, res) {
   //game now is off
-  gameIsOn = false;
-  //reseting the users in the variable
+  gameOn = false;
+  //reseting the users and the temp board arrays
   resetGame();
   //wiping the board
   board = [];
@@ -511,8 +521,8 @@ app.get("/reset", function(req, res) {
       console.log(user + " boards have been wiped !");
     }
   });
-  req.logout();
   io.emit("empty");
+  req.logout();
   res.redirect("/");
 
 

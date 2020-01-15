@@ -11,7 +11,7 @@
   <img id="tablePicture" src="images/trapezi.png">
   <div class="container ">
     <div class="row cardsPlayedFrame">
-      <%for (var i=0; i< board.length ;i++){%>
+      <%for (let i=0; i< board.length ;i++){%>
       <div class="col-lg-2 col-md-2 col-sm-2 col-xs-2">
         <img src="images/<%=board[i]%>.png" class="card-img-top cardPlayedOnBoard">
       </div>
@@ -40,7 +40,7 @@
     <div class="container">
       <div class="playerHand">
         <div class="row">
-          <%for (var i=0; i< startingHand.length ;i++){%>
+          <%for (let i=0; i< startingHand.length ;i++){%>
           <div class="col-lg-2 col-md-2 col-sm-2 col-xs-2">
             <div class="playingCard" cardValue="<%=startingHand[i].value%>" cardSuit="<%=startingHand[i].suit%>">
               <img src="images/<%=startingHand[i].value%><%=startingHand[i].suit%>.png" class="card-img-top">
@@ -60,6 +60,9 @@
       <form action="/logout" method="post">
         <button class="btn btn-danger exitButton btn-sm" type="submit" name="exitButton">Exit Game</button>
       </form>
+
+        <button id="removeHand" class="btn" type="button" name="removeHand">removeHand</button>
+
     </div>
 
     <form id="update" action="/update" method="post">
@@ -70,6 +73,7 @@
     <script>
       //jshint esversion:6
       let turn = $("#turnIndicator").val();
+      //when the doc has finished loading
       $( document ).ready(function() {
         // making cards draggable depending on your turn
           if (turn==="true"){
@@ -90,8 +94,8 @@
             //disable dragging after card being dropped
             $(ui.draggable).draggable('disable');
             //parent card ID
-            var droppedItemValue = ui.draggable.attr("cardValue");
-            var droppedItemSuit = ui.draggable.attr("cardSuit");
+            let droppedItemValue = ui.draggable.attr("cardValue");
+            let droppedItemSuit = ui.draggable.attr("cardSuit");
             //automatically center dropped card
             ui.draggable.position({
               my: "center",

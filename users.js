@@ -1,9 +1,9 @@
 //jshint esversion:6
 const _ = require("lodash");
 
-var users = [];
-var cards = [];
-var remainingCards = [];
+let users = [];
+let cards = [];
+let remainingCards = [];
 
 //function to wipe the game
 function resetGame(){
