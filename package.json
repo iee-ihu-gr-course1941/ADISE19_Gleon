@@ -12,6 +12,9 @@
   },
   "author": "esentis",
   "license": "ISC",
+  "engines": {
+    "node": "12.14.0"
+  },
   "bugs": {
     "url": "https://github.com/iee-ihu-gr-course1941/ADISE19_Gleon/issues"
   },
